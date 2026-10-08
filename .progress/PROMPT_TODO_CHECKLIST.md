@@ -1,6 +1,6 @@
 # PROMPT / TODO CHECKLIST
 
-> Auto-generated from the task queue at 2026-10-08 20:48:13 UTC.
+> Auto-generated from the task queue at 2026-10-08 21:12:37 UTC.
 > Authoritative task count: 194 (old 5 + repo 146 + phase tasks).
 
 - [x] `PHASE0-001` [Phase 0] Inspect project root, framework, tools, machine

@@ -112,6 +112,23 @@
   in there fails. This project's working production URL is
   `veylora-fintech-ai-trading-black.vercel.app`; the plain domain would need to be
   moved off the `web` project (user's call).
+- D25: Leaked Postgres password rotated via the Tiger CLI
+  (`tiger service update-password --auto-generate`, authenticated non-interactively
+  with `tiger auth login --public-key/--secret-key`). Verified: the old password
+  now fails (`FATAL: password authentication failed`) and the new one works; the
+  new `DATABASE_URL` was written to `.env.deploy` and PATCHed into Vercel, then the
+  project was redeployed and the live smoke test re-passed. Already-committed
+  passwords should be rotated, not just deleted from history.
+- D26: Two traps worth remembering when using the Tiger CLI: (a) a hand-copied API
+  public key that was one character short produced a generic "Invalid or missing
+  authentication credentials" — the same message as a genuinely bad key, so verify
+  the length before assuming wrong credentials; (b) `tiger db uri` returns a URI
+  **without** the password, so building `DATABASE_URL` from it silently breaks
+  production — the full string is in `tiger service get <id> --with-password`.
+- D27: The Tiger MCP server is registered for VS Code
+  (`~/.config/Code/User/mcp.json`) and the GitHub Copilot CLI
+  (`~/.copilot/mcp-config.json`). The Gemini CLI install was skipped because the
+  `gemini` binary is not on PATH; re-run `tiger mcp install gemini` once it is.
 
 
 _Last rendered: 2026-10-08 17:21:59 UTC_

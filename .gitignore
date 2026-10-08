@@ -39,6 +39,18 @@ next-env.d.ts
 *credentials*.txt
 *-credentials*
 
+# Local credential notes and provider hand-off files
+pg_service.conf
+.pg_service.conf
+*.pg_service.conf
+*token*.txt
+*secret*.txt
+*password*.txt
+vercel-token.txt
+tigerdata.txt
+.vercel
+.env.deploy
+
 # Local databases
 *.db
 *.db-journal
