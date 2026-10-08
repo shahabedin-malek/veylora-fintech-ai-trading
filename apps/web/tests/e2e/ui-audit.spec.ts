@@ -206,7 +206,8 @@ test("every page is free of horizontal overflow and contrast failures at 3 width
   test.setTimeout(300_000);
 
   const env = readEnv();
-  const secret = env.SESSION_SECRET;
+  // The .env file is gitignored, so CI supplies the secret as an env var.
+  const secret = process.env.SESSION_SECRET ?? env.SESSION_SECRET;
   expect(secret, "SESSION_SECRET must be set in apps/web/.env").toBeTruthy();
 
   const prisma = new PrismaClient();

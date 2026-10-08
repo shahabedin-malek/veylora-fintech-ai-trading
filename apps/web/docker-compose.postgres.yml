@@ -39,7 +39,11 @@ services:
       POSTGRES_USER: veylora
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
     volumes:
-      - pg-data:/var/lib/postgresql/data
+      # postgres:18+ refuses to start when the volume is mounted at
+      # /var/lib/postgresql/data (it stores data in a version-specific
+      # subdirectory); mount the parent directory instead.
+      # https://github.com/docker-library/postgres/pull/1259
+      - pg-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U veylora -d veylora"]
       interval: 10s

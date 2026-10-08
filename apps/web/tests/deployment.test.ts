@@ -108,6 +108,10 @@ describe("repository hygiene", () => {
     const pgCompose = readFileSync(join(ROOT, "docker-compose.postgres.yml"), "utf8");
     expect(pgCompose).toMatch(/DB_PROVIDER:\s*postgresql/);
     expect(pgCompose).toMatch(/^\s+db:/m);
+    // postgres:18+ refuses to start with the volume mounted at the old
+    // /var/lib/postgresql/data path (caught by CI, not local runs).
+    expect(pgCompose).toMatch(/pg-data:\/var\/lib\/postgresql\s*$/m);
+    expect(pgCompose).not.toMatch(/pg-data:\/var\/lib\/postgresql\/data/);
   });
 
   it("ships committed migrations for both datasource providers", () => {

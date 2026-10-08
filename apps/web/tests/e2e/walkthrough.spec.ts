@@ -32,8 +32,9 @@ test("fresh session walkthrough: public content, protected redirects, no secret 
   browser,
 }) => {
   test.setTimeout(120_000);
-  const secret = readEnv().SESSION_SECRET;
-  expect(secret, "SESSION_SECRET must be set in apps/web/.env").toBeTruthy();
+  // The .env file is gitignored, so CI supplies the secret as an env var.
+  const secret = process.env.SESSION_SECRET ?? readEnv().SESSION_SECRET;
+  expect(secret, "SESSION_SECRET must be set (apps/web/.env or the environment)").toBeTruthy();
 
   const context = await browser.newContext();
   const page = await context.newPage();
