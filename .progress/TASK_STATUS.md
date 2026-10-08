@@ -4,9 +4,8 @@
 
 ## By status
 
-- BLOCKED: 1
 - DROPPED: 2
-- VERIFIED: 191
+- VERIFIED: 192
 
 ## By phase
 
@@ -31,4 +30,4 @@
 
 ## Open (not complete, not blocked)
 
-- [BLOCKED] `PHASE16-002` Deploy to Vercel (needs VERCEL_TOKEN + Postgres URL)
+_None._

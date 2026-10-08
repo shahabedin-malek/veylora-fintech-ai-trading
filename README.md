@@ -7,11 +7,11 @@ flows, and a built-in CRM/support layer with an admin console.
 > **Simulated only.** All trading is paper trading. No real funds move, and no
 > simulated result represents a real or guaranteed investment return.
 >
-> **Publication:** source is published at
-> <https://github.com/shahabedin-malek/veylora-fintech-ai-trading> (public); CI is
-> green on `main` (verify, docs, e2e, Docker, Postgres stack). The Vercel
-> deployment is still pending a `VERCEL_TOKEN` and a managed Postgres
-> `DATABASE_URL`.
+> **Published.** Source: <https://github.com/shahabedin-malek/veylora-fintech-ai-trading>
+> (public, CI green on `main`). Live: <https://veylora-fintech-ai-trading-black.vercel.app>
+> (Next.js on Vercel + managed Postgres). Note that the shorter
+> `veylora-fintech-ai-trading.vercel.app` belongs to a separate, misconfigured
+> deployment of this app and does not work — see `.progress/DECISIONS.md` (D24).
 
 ## Repository layout
 

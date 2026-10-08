@@ -47,7 +47,7 @@ PHASE_TASKS = [
     ("PHASE15-012", "Phase 15", "CI job for doc-sync tests", 4),
     ("PHASE15-013", "Phase 15", "CI Postgres stack job + smoke query", 4),
     ("PHASE16-001", "Phase 16", "Publish source to GitHub (veylora-fintech-ai-trading)", 2),
-    ("PHASE16-002", "Phase 16", "Deploy to Vercel (needs VERCEL_TOKEN + Postgres URL)", 2),
+    ("PHASE16-002", "Phase 16", "Deploy to Vercel + live post-deploy verification", 2),
 ]
 
 

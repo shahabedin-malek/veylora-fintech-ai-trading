@@ -91,6 +91,27 @@
   (b) the e2e specs read `SESSION_SECRET` from the gitignored `apps/web/.env`, so
   they now prefer the environment variable. Both are fixed and guarded by tests;
   CI is green on `main` (verify, docs, e2e, docker, postgres).
+- D22: Deployed to Vercel (PHASE16-002) against a managed Postgres (Tiger Cloud),
+  with `DATABASE_URL`, `SESSION_SECRET` and `DB_PROVIDER=postgresql` set as project
+  env vars and the project's Root Directory set to `apps/web`. Migrations were
+  applied and seeded from this machine using the direct connection. Verified live:
+  the seeded account signs in against the production database and the app renders
+  real market data. `tests/e2e/live.spec.ts` makes that repeatable and skips
+  without `LIVE_URL`, so CI is unaffected.
+- D23: Incident — a provider credentials download
+  (`tiger-cloud-db-51231-credentials.txt`, containing the Postgres password) was
+  accidentally committed and pushed to the public repo. It lived in the HEAD
+  commit only, so the commit was rewritten and force-pushed, the file is now
+  gitignored, and the remote serves 404 and no longer has the objects. Because a
+  public push cannot be assumed unread, the database password is treated as
+  compromised and must be rotated. Lesson: scan staged files for credential
+  *files* by name/pattern, not just for inline secret-looking strings.
+- D24: The production alias `veylora-fintech-ai-trading.vercel.app` is owned by a
+  pre-existing Vercel project (`web`), a second deployment of the same app that
+  lacks the database env vars and therefore runs a SQLite Prisma client — signing
+  in there fails. This project's working production URL is
+  `veylora-fintech-ai-trading-black.vercel.app`; the plain domain would need to be
+  moved off the `web` project (user's call).
 
 
 _Last rendered: 2026-10-08 17:21:59 UTC_
