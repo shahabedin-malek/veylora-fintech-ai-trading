@@ -6,7 +6,7 @@
 
 - BLOCKED: 1
 - DROPPED: 2
-- VERIFIED: 190
+- VERIFIED: 191
 
 ## By phase
 
@@ -18,7 +18,7 @@
 - Phase 13: 2
 - Phase 14: 6
 - Phase 15: 13
-- Phase 16: 1
+- Phase 16: 2
 - Phase 17: 1
 - Phase 2: 6
 - Phase 3: 2
@@ -31,4 +31,4 @@
 
 ## Open (not complete, not blocked)
 
-- [BLOCKED] `PHASE16-001` GitHub/Vercel publish + deploy (blocked: needs explicit user authorization)
+- [BLOCKED] `PHASE16-002` Deploy to Vercel (needs VERCEL_TOKEN + Postgres URL)

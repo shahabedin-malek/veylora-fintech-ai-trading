@@ -112,6 +112,12 @@ truth. To do it by hand instead:
 The Postgres override keeps the base file's unused SQLite volume mounted but
 empty; only `pg-data` is used.
 
+> **Volume path:** `pg-data` is mounted at **`/var/lib/postgresql`**, not
+> `/var/lib/postgresql/data`. From `postgres:18` the image stores data in a
+> version-specific subdirectory and **refuses to start** if the volume is
+> mounted at the old `…/data` path. This was caught by the CI `postgres` job and
+> is now guarded by `tests/deployment.test.ts`.
+
 ### Migrations
 
 Prisma locks a migrations directory to **one** provider, so the project commits

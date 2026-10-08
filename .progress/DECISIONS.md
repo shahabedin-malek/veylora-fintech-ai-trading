@@ -74,6 +74,23 @@
   `_prisma_migrations`). This exercises the Postgres provider + migrations path
   end to end in CI, not just locally. The exact smoke SQL was verified against a
   real PostgreSQL 18.6 server (2 users, 1 applied migration).
+- D19: Product renamed from the provisional "Aurelia — AI Market Desk" slug to
+  **Veylora Fintech AI Trading** (slug `veylora`). The rebrand is complete, not
+  cosmetic: site title/nav/icon, seeded accounts (`trader@veylora.dev`,
+  `admin@veylora.dev`), RSS user-agent, package name, Docker image/volume/compose
+  names, the Postgres service user/db, CI images and smoke SQL, and the docs. The
+  dev DB was reset + re-seeded.
+- D20: Published to GitHub as a **public** repository,
+  <https://github.com/shahabedin-malek/veylora-fintech-ai-trading>, with the user's
+  explicit authorization (PHASE16-001). Vercel deployment is tracked separately as
+  PHASE16-002 and remains blocked until a `VERCEL_TOKEN` and a managed Postgres
+  `DATABASE_URL` are provided — serverless filesystems do not persist SQLite.
+- D21: The first real CI run on GitHub caught two failures that local runs could
+  not: (a) `postgres:18` refuses to start with its volume at
+  `/var/lib/postgresql/data`, so the override now mounts `/var/lib/postgresql`;
+  (b) the e2e specs read `SESSION_SECRET` from the gitignored `apps/web/.env`, so
+  they now prefer the environment variable. Both are fixed and guarded by tests;
+  CI is green on `main` (verify, docs, e2e, docker, postgres).
 
 
 _Last rendered: 2026-10-08 17:21:59 UTC_

@@ -1,7 +1,7 @@
 # PROMPT / TODO CHECKLIST
 
-> Auto-generated from the task queue at 2026-10-08 19:28:19 UTC.
-> Authoritative task count: 193 (old 5 + repo 146 + phase tasks).
+> Auto-generated from the task queue at 2026-10-08 20:01:17 UTC.
+> Authoritative task count: 194 (old 5 + repo 146 + phase tasks).
 
 - [x] `PHASE0-001` [Phase 0] Inspect project root, framework, tools, machine
 - [x] `PHASE0-002` [Phase 0] Create .progress control plane
@@ -34,7 +34,8 @@
 - [x] `PHASE15-011` [Phase 15] Doc-sync tests (routes, scripts, env)
 - [x] `PHASE15-012` [Phase 15] CI job for doc-sync tests
 - [x] `PHASE15-013` [Phase 15] CI Postgres stack job + smoke query
-- [ ] `PHASE16-001` [Phase 16] GitHub/Vercel publish + deploy (blocked: needs explicit user authorization)
+- [x] `PHASE16-001` [Phase 16] Publish source to GitHub (veylora-fintech-ai-trading)
+- [ ] `PHASE16-002` [Phase 16] Deploy to Vercel (needs VERCEL_TOKEN + Postgres URL)
 - [x] `PHASE17-001` [Phase 17] Final walkthrough gate (fresh browser session)
 - [x] `OLD-0001` [Phase 2] Audit historical project crypto-payment-backup
 - [x] `OLD-0002` [Phase 2] Audit historical project crypto-portal

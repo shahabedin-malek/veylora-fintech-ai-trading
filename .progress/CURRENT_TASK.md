@@ -4,9 +4,9 @@
 - **phase:** —
 - **title:** no open tasks
 - **status:** —
-- **updated_at:** 2026-10-08 19:28:19 UTC
+- **updated_at:** 2026-10-08 20:01:17 UTC
 - **machine:** chris-pc
 
 ## Blocked (not the next action)
 
-- `PHASE16-001` GitHub/Vercel publish + deploy (blocked: needs explicit user authorization)
+- `PHASE16-002` Deploy to Vercel (needs VERCEL_TOKEN + Postgres URL)
