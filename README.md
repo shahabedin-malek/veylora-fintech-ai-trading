@@ -1,11 +1,14 @@
 # Veylora Fintech AI Trading
 
 An AI-assisted financial dashboard covering crypto, forex and global equities,
-with charts, market data, a **simulated** trading desk, wallet deposit/withdrawal
-flows, and a built-in CRM/support layer with an admin console.
+with charts, market data, a trading desk, wallet deposit/withdrawal flows, and a
+built-in CRM/support layer with an admin console.
 
-> **Simulated only.** All trading is paper trading. No real funds move, and no
-> simulated result represents a real or guaranteed investment return.
+> **The login wallet picks the mode.** Sign-in is by wallet: a **testnet** wallet
+> runs fully **simulated** paper flows, a **mainnet** wallet is intended to run
+> **real** ones. Mainnet execution is **not implemented yet** (Phase 18 — see
+> `docs/NETWORK_BOUNDARY.md`), so today every wallet is `kind: "SIMULATED"` and no
+> real funds can move. No result shown is a real or guaranteed investment return.
 >
 > **Published.** Source: <https://github.com/shahabedin-malek/veylora-fintech-ai-trading>
 > (public, CI green on `main`). Live: <https://veylora-fintech-ai-trading-black.vercel.app>

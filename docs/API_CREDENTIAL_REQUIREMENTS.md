@@ -20,13 +20,31 @@ and each optional key unlocks a specific enhancement. Never commit real secrets.
 | `WITHDRAW_FEE_BPS` | app (self) | no | n/a | n/a | withdrawal maths | 100 = 1% simulated fee |
 | `MIN_TRADE_USD` | app (self) | no | n/a | n/a | trading state machine | default 20 |
 
-## Wallet / chain integration (not enabled by default)
+## Wallet / chain integration (Phase 18 — login becomes wallet-based)
 
-If a real or testnet wallet is ever wired in, use the adapter interface
-(`kind` = SIMULATED / TESTNET / MAINNET). Mainnet stays disabled until explicitly
-enabled. Recommended testnets: Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia.
-Required vars would be added as `WALLET_RPC_URL_*`, `WALLET_CHAIN_ID`, and a
-read-only explorer key — **never** a seed phrase or private key.
+Sign-in is moving to **wallet connect + SIWE (EIP-4361)**. The signed-in network
+sets the execution mode: a testnet wallet is simulated, a mainnet wallet is real.
+Recommended testnets: Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia.
+
+Required for that work:
+
+| Env var | Service | Purpose | Notes |
+| --- | --- | --- | --- |
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | WalletConnect/Reown Cloud | wallet connect UI | public, not a secret |
+| `WALLET_RPC_URL_<CHAIN>` | RPC provider (Alchemy/Infura/public) | read chain state, verify balances | read URLs only |
+| `SIWE_DOMAIN` | app | binds the SIWE message to this origin | anti-phishing |
+| `MAINNET_EXECUTION_ENABLED` | app | hard kill-switch for real execution | must default to disabled |
+
+Rules that must not be relaxed:
+
+- **Never** a seed phrase or private key in an env var, the repo, or logs. Any
+  operational key for real withdrawals belongs in a KMS/HSM, not in config.
+- Real execution requires `MAINNET_EXECUTION_ENABLED` **and** a mainnet session —
+  two independent checks, both server-side.
+- RPC/explorer keys are read-only; a compromised read key must not be able to move
+  funds.
+
+See `docs/NETWORK_BOUNDARY.md` for the full list of blockers before mainnet.
 
 ## Deployment (only after explicit authorization)
 

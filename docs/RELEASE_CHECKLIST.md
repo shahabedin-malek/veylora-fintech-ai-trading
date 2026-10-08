@@ -2,7 +2,7 @@
 
 Go / no-go gate for shipping **Veylora Fintech AI Trading**. Every box must be
 checked, or the item must carry an explicit waiver with a recorded reason. This is
-the release companion to `SIMULATION_BOUNDARY.md` and `DEPENDENCY_AUDIT.md`.
+the release companion to `NETWORK_BOUNDARY.md` and `DEPENDENCY_AUDIT.md`.
 
 **Release format:** self-hosted Next.js 16 app + Prisma datastore, shipped as a
 Docker image (`apps/web/Dockerfile`; see `DEPLOYMENT.md`).
@@ -38,9 +38,13 @@ until the user explicitly authorizes it (`PHASE16-001`).
 - [ ] No API route handlers were added (mutations remain authenticated server actions).
 - [ ] Dependency policy honoured: **no accepted production advisories** (see `DEPENDENCY_AUDIT.md`).
 
-## 4. Simulation boundary (see `SIMULATION_BOUNDARY.md`)
+## 4. Network boundary (see `NETWORK_BOUNDARY.md`)
 
-- [ ] All trading is paper trading; no flow implies a real or guaranteed return.
+- [ ] Session mode is derived from the signed-in network and verified server-side.
+- [ ] A testnet session reaches only simulated execution; a mainnet session
+      reaches only the real executor (or refuses) — never a silent fallback.
+- [ ] Mainnet execution stays disabled until Phase 18 is complete.
+- [ ] No flow implies a real or guaranteed return; claims match the session's mode.
 - [ ] Every market value carries its `source` + `simulated` flag; fallbacks are labelled, never silent.
 - [ ] News comes only from configured real RSS feeds; empty state shown when none respond; nothing fabricated.
 - [ ] Wallet is `kind: "SIMULATED"`; **mainnet remains disabled**.
@@ -69,7 +73,7 @@ until the user explicitly authorizes it (`PHASE16-001`).
 
 - [ ] Root `README.md` and `apps/web/README.md` accurate (stack, routes, scripts, test counts).
 - [ ] `docs/ARCHITECTURE.md`, `DATA_MODEL.md`, `PRODUCT_REQUIREMENTS.md` current.
-- [ ] `docs/SIMULATION_BOUNDARY.md`, `docs/DEPENDENCY_AUDIT.md` and `docs/DEPLOYMENT.md` current.
+- [ ] `docs/NETWORK_BOUNDARY.md`, `docs/DEPENDENCY_AUDIT.md` and `docs/DEPLOYMENT.md` current.
 - [ ] `.progress/*` checkpoint regenerated (`python3 scripts/progress_report.py`).
 
 ## 8. Publish gate — requires explicit user authorization

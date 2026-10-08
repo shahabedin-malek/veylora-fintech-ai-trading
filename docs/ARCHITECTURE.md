@@ -77,7 +77,11 @@ reply, add internal notes, and view the customer timeline.
 - Wallet providers sit behind an adapter interface (simulated / testnet / mainnet).
 - Mainnet flows are disabled by default; the app runs on the simulated adapter.
 - All trading is paper trading; balances and P/L are labelled simulated.
-- Auth uses hashed passwords + a signed session cookie (httpOnly, SameSite=Lax).
+- Auth currently uses hashed passwords + a signed session cookie (httpOnly,
+  SameSite=Lax). **Target (Phase 18):** wallet connect + SIWE (EIP-4361) replaces
+  email/password, and the session carries the signed-in network class
+  (`TESTNET` ⇒ simulated, `MAINNET` ⇒ real) so server actions can gate execution
+  without trusting a client-supplied flag. See `docs/NETWORK_BOUNDARY.md`.
 
 ## Corpus pipeline (parallel subsystem)
 

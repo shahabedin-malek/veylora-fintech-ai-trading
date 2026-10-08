@@ -80,9 +80,14 @@ See `../../docs/ARCHITECTURE.md` and `../../docs/DATA_MODEL.md`.
 - Secrets live only in `.env` (git-ignored).
 - `SESSION_SECRET` signs the httpOnly session cookie; in production the app
   refuses to sign with a missing or weak secret (fails closed).
-- Mainnet wallet flows are disabled; the app uses the simulated wallet.
+- Sign-in is by wallet: the signed-in **network decides the mode** — a testnet
+  wallet runs simulated paper flows, a mainnet wallet is intended to run real
+  ones. Mainnet execution is **not built yet** (Phase 18, see
+  `../../docs/NETWORK_BOUNDARY.md`), so every wallet is currently
+  `kind: "SIMULATED"` and all flows are simulated.
 
-See `../../docs/SIMULATION_BOUNDARY.md` for exactly what is real vs simulated,
+See `../../docs/NETWORK_BOUNDARY.md` for the real-vs-simulated rule (it follows the
+wallet you sign in with),
 `../../docs/RELEASE_CHECKLIST.md` before shipping, and
 `../../docs/DEPENDENCY_AUDIT.md` for the dependency posture.
 

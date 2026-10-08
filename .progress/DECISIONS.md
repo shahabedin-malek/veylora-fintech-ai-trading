@@ -129,6 +129,19 @@
   (`~/.config/Code/User/mcp.json`) and the GitHub Copilot CLI
   (`~/.copilot/mcp-config.json`). The Gemini CLI install was skipped because the
   `gemini` binary is not on PATH; re-run `tiger mcp install gemini` once it is.
+- D28: **Roadmap change (user-directed): the product is no longer simulation-only.**
+  Sign-in becomes **wallet-based** (SIWE / EIP-4361) and the signed-in network
+  decides the mode: a **testnet** wallet runs simulated paper flows, a **mainnet**
+  wallet runs real ones — read on every action from the server-side session, never
+  from a client flag. `docs/SIMULATION_BOUNDARY.md` is superseded by
+  `docs/NETWORK_BOUNDARY.md`, and `docs/PROJECT_PLAN.md` gains Phase 18 with tasks
+  `PHASE18-001` … `PHASE18-009`. This is a re-architecture, not a flag flip: it needs
+  wallet auth, network classification, custody (KMS/HSM — never a private key in
+  config), a real execution venue, irreversibility UX and compliance. **Mainnet
+  execution stays disabled until those land**, and the user-facing copy must not
+  claim real trading before then. The existing "source contains no `MAINNET`"
+  invariant is deliberately kept until `PHASE18-008` replaces it with network-gating
+  tests, so the current build cannot accidentally ship a real-money path.
 
 
 _Last rendered: 2026-10-08 17:21:59 UTC_

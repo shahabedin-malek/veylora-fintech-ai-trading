@@ -31,17 +31,30 @@ responsive UI.
 | 4 | Extraction/scraping framework + per-file knowledge | done (146/146) |
 | 5 | Per-repository work units | done (146/146 VERIFIED) |
 | 6 | Central knowledge synthesis | done (first pass) |
-| 7 | Product requirements + architecture | in progress |
-| 8 | Branding / names | in progress |
-| 9 | API credential requirements | in progress |
-| 10 | Windows + Linux distributed development | connectivity check (optional router dropped) |
-| 11 | Core app vertical slice | starting |
-| 12 | CRM/support tickets + admin | pending |
-| 13 | UI/UX polish + responsive | pending |
-| 14 | Test suite | pending |
-| 15 | Security + release readiness | pending |
-| 16 | GitHub/Vercel (authorization required) | blocked on user |
-| 17 | Final walkthrough gate | pending |
+| 7 | Product requirements + architecture | done |
+| 8 | Branding / names | done (Veylora Fintech AI Trading) |
+| 9 | API credential requirements | done |
+| 10 | Windows + Linux distributed development | done (optional router dropped) |
+| 11 | Core app vertical slice | done |
+| 12 | CRM/support tickets + admin | done |
+| 13 | UI/UX polish + responsive | done |
+| 14 | Test suite | done |
+| 15 | Security + release readiness | done |
+| 16 | GitHub/Vercel publish + deploy | done (public repo, Vercel + managed Postgres) |
+| 17 | Final walkthrough gate | done |
+| 18 | **Wallet auth + network-aware execution** — mainnet = real, testnet = simulated | **planned (roadmap change)** |
+
+## Phase 18 — wallet auth + network-aware execution
+
+The roadmap changed: the product is no longer simulation-only. Sign-in becomes
+**wallet-based** (SIWE), and the signed-in network decides whether every action is
+real or simulated — testnet ⇒ simulated, mainnet ⇒ real.
+
+This is a re-architecture, not a flag flip. It replaces the email/password session,
+the `kind: "SIMULATED"` invariant and the "no `MAINNET`" test with network gating,
+and it needs custody, a real execution venue, irreversibility UX and compliance.
+`docs/NETWORK_BOUNDARY.md` lists the blockers in full; the delivery tasks are
+`PHASE18-001` … `PHASE18-009`. **Mainnet execution stays disabled until they land.**
 
 ## Critical path (value first)
 

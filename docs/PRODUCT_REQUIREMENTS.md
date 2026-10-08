@@ -35,7 +35,8 @@
 
 | Requirement | Implemented | Location |
 | --- | --- | --- |
-| Login / registration | yes (scrypt + signed cookie) | `/login` |
+| Login | **wallet connect + SIWE** (target, Phase 18). Today: email + password (scrypt + signed cookie) | `/login` |
+| Execution mode | derived from the signed-in wallet's network — testnet ⇒ simulated, mainnet ⇒ real (**mainnet not built**) | everywhere |
 | Wallet connection (simulated) | yes | `/wallet` |
 | Portfolio / balances | yes | `/dashboard`, `/wallet` |
 | Deposit flow | yes | `/wallet` |

@@ -1,8 +1,10 @@
 # Deployment Notes
 
 Concrete target for `RELEASE_CHECKLIST.md`: a **self-hosted Docker image** of the
-Next.js app with a Prisma datastore. Read `SIMULATION_BOUNDARY.md` first — the
-deployed app is still **simulated**: no real funds, no mainnet, no live orders.
+Next.js app with a Prisma datastore. Read `NETWORK_BOUNDARY.md` first — the
+boundary is decided by the **wallet you sign in with** (testnet = simulated,
+mainnet = real). Mainnet execution is **not implemented yet** (Phase 18), so any
+deployment today is effectively simulated: no real funds, no live orders.
 
 > **Published.** The GitHub push and Vercel deploy were explicitly authorized by
 > the user (`PHASE16-001` / `PHASE16-002`). The deployed app is still fully
