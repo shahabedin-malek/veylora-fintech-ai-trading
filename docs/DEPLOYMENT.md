@@ -4,8 +4,9 @@ Concrete target for `RELEASE_CHECKLIST.md`: a **self-hosted Docker image** of th
 Next.js app with a Prisma datastore. Read `SIMULATION_BOUNDARY.md` first — the
 deployed app is still **simulated**: no real funds, no mainnet, no live orders.
 
-> **Publishing is blocked.** Nothing here authorizes a GitHub push or a Vercel
-> deploy; that needs explicit user approval (`PHASE16-001`).
+> **Published.** The GitHub push and Vercel deploy were explicitly authorized by
+> the user (`PHASE16-001` / `PHASE16-002`). The deployed app is still fully
+> **simulated** — no real funds, no mainnet, no live orders.
 
 ## The image
 
@@ -159,6 +160,46 @@ forward to `web:3000`. The session cookie is `httpOnly`, `sameSite=lax`, and
   current models.
 - **Backups:** SQLite — copy `prod.db` from the volume (`docker run --rm -v
   veylora-data:/d alpine cp /d/prod.db /d/prod.db.bak`); Postgres — `pg_dump`.
+
+## Vercel (serverless)
+
+Vercel **cannot** use SQLite — serverless filesystems are ephemeral — so this
+target needs a managed Postgres (e.g. Neon). It also has no Docker build args,
+so the provider switch runs from the build instead.
+
+1. Set these project env vars (Vercel → Project → Settings → Environment Variables):
+
+   | Var | Value |
+   | --- | --- |
+   | `DATABASE_URL` | **pooled** Postgres URL (host contains `-pooler`) |
+   | `SESSION_SECRET` | `openssl rand -base64 32`, unique per environment |
+   | `DB_PROVIDER` | `postgresql` |
+
+2. `DB_PROVIDER=postgresql` makes the `prebuild` script
+   (`scripts/select-provider.mjs`) rewrite `prisma/schema.prisma` to the Postgres
+   provider before `prisma generate` — the same outcome as the Docker build arg.
+   Without it the build would generate a **SQLite** client and every query would
+   fail at runtime.
+
+3. Apply migrations **before** the first request, from a machine that can reach the
+   database, using the **direct** (non-pooled) URL: `prisma migrate deploy` can fail
+   through a PgBouncer pooler. Prisma locks a migrations directory to one provider,
+   so swap in the Postgres set first:
+
+   ```bash
+   cd apps/web
+   mv prisma/migrations prisma/.migrations-sqlite \
+     && mv prisma/migrations-postgres prisma/migrations
+
+   DATABASE_URL="postgresql://…direct…" npx prisma migrate deploy
+   DATABASE_URL="postgresql://…direct…" npm run db:seed
+
+   mv prisma/migrations prisma/migrations-postgres \
+     && mv prisma/.migrations-sqlite prisma/migrations   # leave the tree clean
+   ```
+
+4. The build then runs `prisma generate && next build`; Prisma generates its query
+   engine for the build machine's platform, so no `binaryTargets` change is needed.
 
 ## Security notes
 

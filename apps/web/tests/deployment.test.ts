@@ -83,6 +83,18 @@ describe("repository hygiene", () => {
     expect(schema).toMatch(/provider\s*=\s*"(sqlite|postgresql)"/);
   });
 
+  it("can switch the Prisma provider to Postgres for a serverless deploy", () => {
+    // The Vercel build has no DB_PROVIDER build arg (that is a Docker concept),
+    // so the switch has to happen from a build script driven by the environment.
+    const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+    expect(Object.keys(pkg.scripts)).toContain("prebuild");
+    expect(pkg.scripts.prebuild).toMatch(/select-provider/);
+
+    const script = readFileSync(join(ROOT, "scripts/select-provider.mjs"), "utf8");
+    expect(script).toMatch(/DB_PROVIDER/);
+    expect(script).toMatch(/postgresql/);
+  });
+
   it("defaults to the simulated wallet and never enables mainnet", () => {
     const source = readFileSync(join(ROOT, "src/lib/actions.ts"), "utf8");
     expect(source).toMatch(/kind:\s*"SIMULATED"/);
