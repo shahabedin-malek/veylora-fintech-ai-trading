@@ -83,6 +83,14 @@ until the user explicitly authorizes it (`PHASE16-001`).
 - [ ] Log in as the seeded sample user; start and force-stop a simulated session.
 - [ ] Open a support ticket as the user; triage it as the admin.
 - [ ] Confirm the production server does **not** boot into an insecure session mode.
+- [ ] Run the automated live smoke test against the deployment (verifies the
+      database is reachable, the seeded account signs in, and no secret leaks):
+
+      ```bash
+      LIVE_URL=https://<deployment-url> npx playwright test tests/e2e/live.spec.ts
+      ```
+
+      It is skipped automatically when `LIVE_URL` is unset, so CI is unaffected.
 
 ---
 
