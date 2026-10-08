@@ -1,0 +1,177 @@
+// Fintech + CRM product schema.
+// Local development uses SQLite; switch `provider` to "postgresql" + DATABASE_URL for deploy.
+// NOTE: SQLite has no native enum support, so status fields are stored as strings
+// with the allowed values documented next to each field and enforced in the domain layer.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("USER") // USER | ADMIN
+  createdAt    DateTime @default(now())
+
+  wallet        Wallet?
+  customer      Customer?
+  ledgerEntries LedgerEntry[]
+  portfolio     Portfolio[]
+  sessions      TradingSession[]
+  transactions  Transaction[]
+  notifications Notification[]
+  tickets       Ticket[]        @relation("TicketOwner")
+  assigned      Ticket[]        @relation("TicketAssignee")
+  messages      TicketMessage[]
+  auditLogs     AuditLog[]
+}
+
+model Wallet {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  address    String
+  network    String   @default("simulated") // simulated | testnet | mainnet
+  kind       String   @default("SIMULATED") // SIMULATED | TESTNET | MAINNET
+  balanceCents Int    @default(0)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LedgerEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // DEPOSIT | WITHDRAWAL | FEE | PAPER_PNL
+  amountCents Int      // signed
+  ref         String?
+  note        String?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Portfolio {
+  id         String   @id @default(cuid())
+  userId     String
+  asset      String
+  qty        Float    @default(0)
+  valueCents Int      @default(0)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TradingSession {
+  id          String    @id @default(cuid())
+  userId      String
+  status      String    @default("IDLE") // IDLE | ACTIVE | STOPPED
+  startedAt   DateTime?
+  stoppedAt   DateTime?
+  pnlCents    Int       @default(0)
+  strategy    String    @default("paper-balanced")
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events      TradeEvent[]
+
+  @@index([userId, status])
+}
+
+model TradeEvent {
+  id        String   @id @default(cuid())
+  sessionId String
+  kind      String   // SCAN | ANALYZE | OPEN | UPDATE | CLOSE | INFO
+  message   String
+  createdAt DateTime @default(now())
+  session   TradingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  kind        String   // DEPOSIT | WITHDRAWAL | PAPER_TRADE | FEE
+  amountCents Int
+  status      String   @default("COMPLETED") // PENDING | COMPLETED | FAILED
+  detail      String?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  name      String
+  email     String
+  tier      String   @default("standard")
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tickets   Ticket[]
+}
+
+model Ticket {
+  id         String   @id @default(cuid())
+  number     String   @unique
+  customerId String
+  ownerId    String
+  assigneeId String?
+  subject    String
+  status     String   @default("OPEN") // OPEN | PENDING | RESOLVED | CLOSED
+  priority   String   @default("NORMAL") // LOW | NORMAL | HIGH | URGENT
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  owner    User            @relation("TicketOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  assignee User?           @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  messages TicketMessage[]
+
+  @@index([status, priority])
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  authorId  String
+  body      String
+  internal  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  subject   String?
+  detail    String?
+  createdAt DateTime @default(now())
+  actor     User?    @relation(fields: [actorId], references: [id])
+}
+
+model MarketCache {
+  key       String   @id
+  payload   String
+  source    String
+  fetchedAt DateTime @default(now())
+}

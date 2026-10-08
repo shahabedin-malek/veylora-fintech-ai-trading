@@ -1,0 +1,178 @@
+name: CI
+
+# Runs once the repository is pushed to GitHub. Publishing remains blocked until
+# explicitly authorized (see docs/RELEASE_CHECKLIST.md) — this file does nothing
+# on its own.
+# Heavy jobs run on main and on PRs. The fast doc-sync checks run on every
+# branch push in .github/workflows/docs.yml.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Deterministic datasource for `prisma generate` / `next build`; the test suite
+  # swaps in its own throwaway SQLite file. Not a production secret.
+  DATABASE_URL: file:./ci.db
+  SESSION_SECRET: ci-only-not-a-real-secret-0000000000
+
+defaults:
+  run:
+    working-directory: apps/web
+
+jobs:
+  verify:
+    name: verify:deploy (build + tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Dependency audit (fail on high or above)
+        run: npm audit --audit-level=high
+      - name: Production build + full test suite
+        run: npm run verify:deploy
+
+  e2e:
+    name: Playwright e2e + UI audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Apply migrations and seed sample/admin accounts
+        run: npm run db:deploy && npm run db:seed
+      - name: Production build
+        run: npm run build
+      - name: Install Chrome for Playwright
+        run: npx playwright install --with-deps chrome
+      - name: Run e2e (journey + UI audit + walkthrough)
+        run: npm run test:e2e
+      - name: Upload UI audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-audit
+          path: apps/web/reports/
+          if-no-files-found: ignore
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Validate compose (SQLite default)
+        env:
+          SESSION_SECRET: ci-compose-secret-000000000000
+        run: docker compose -f docker-compose.yml config -q
+
+      - name: Validate compose (Postgres override)
+        env:
+          SESSION_SECRET: ci-compose-secret-000000000000
+          POSTGRES_PASSWORD: ci-compose-pg-password
+        run: docker compose -f docker-compose.yml -f docker-compose.postgres.yml config -q
+
+      - name: Build runner image (SQLite)
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/web
+          target: runner
+          load: true
+          tags: veylora-web:ci
+
+      - name: Build runner image (Postgres variant)
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/web
+          target: runner
+          build-args: DB_PROVIDER=postgresql
+          load: true
+          tags: veylora-web:ci-pg
+
+      - name: Boot smoke test
+        # /login renders without the datastore, so this proves the image starts
+        # and serves HTTP before the schema is applied.
+        run: |
+          docker run -d --name veylora-smoke -p 3000:3000 \
+            -e SESSION_SECRET=ci-smoke-secret-00000000000000 \
+            veylora-web:ci
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/login > /dev/null; then ok=1; break; fi
+            sleep 2
+          done
+          docker logs veylora-smoke || true
+          docker rm -f veylora-smoke || true
+          test "$ok" = 1
+
+  postgres:
+    name: Postgres stack (migrations + smoke)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SESSION_SECRET: ci-postgres-secret-000000000000
+      POSTGRES_PASSWORD: ci-postgres-password
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      # Uses the postgres override: builds with DB_PROVIDER=postgresql, so the
+      # schema is switched and the migrations-postgres set is swapped in.
+      - name: Apply migrations and seed against a real Postgres
+        run: >-
+          docker compose -f docker-compose.yml -f docker-compose.postgres.yml
+          --profile init run --rm init
+
+      - name: Start the stack (wait for health)
+        run: >-
+          docker compose -f docker-compose.yml -f docker-compose.postgres.yml
+          up -d --wait --wait-timeout 240
+
+      - name: The app serves HTTP
+        run: curl -fsS http://127.0.0.1:3000/login > /dev/null
+
+      - name: Smoke query against Postgres
+        run: |
+          q() {
+            docker compose -f docker-compose.yml -f docker-compose.postgres.yml \
+              exec -T -e PGPASSWORD="$POSTGRES_PASSWORD" db \
+              psql -h 127.0.0.1 -U veylora -d veylora -tA -v ON_ERROR_STOP=1 -c "$1"
+          }
+          users=$(q 'select count(*) from "User";' | tr -d '[:space:]')
+          migrations=$(q 'select count(*) from _prisma_migrations where finished_at is not null;' | tr -d '[:space:]')
+          echo "seeded users: ${users} | applied migrations: ${migrations}"
+          test "$users" -ge 2
+          test "$migrations" -ge 1
+
+      - name: Logs (on failure)
+        if: failure()
+        run: docker compose -f docker-compose.yml -f docker-compose.postgres.yml logs --no-color
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.postgres.yml down -v

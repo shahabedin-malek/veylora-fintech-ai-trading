@@ -1,0 +1,27 @@
+# Build artifacts (rebuilt inside the image)
+node_modules
+.next
+out
+dist
+*.tsbuildinfo
+
+# Secrets and local data — never bake these into an image
+.env
+.env.*
+!.env.example
+*.db
+*.db-journal
+prisma/*.db
+prisma/dev.db*
+
+# Test and reporting artifacts
+reports
+test-results
+playwright-report
+
+# VCS and local docs
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+README.md

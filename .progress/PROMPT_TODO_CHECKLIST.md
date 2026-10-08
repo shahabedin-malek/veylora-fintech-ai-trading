@@ -1,0 +1,198 @@
+# PROMPT / TODO CHECKLIST
+
+> Auto-generated from the task queue at 2026-10-08 19:28:19 UTC.
+> Authoritative task count: 193 (old 5 + repo 146 + phase tasks).
+
+- [x] `PHASE0-001` [Phase 0] Inspect project root, framework, tools, machine
+- [x] `PHASE0-002` [Phase 0] Create .progress control plane
+- [x] `PHASE0-003` [Phase 0] Create database checkpoint schema
+- [x] `PHASE0-004` [Phase 0] Create docs: audit/plan/architecture/data model
+- [x] `PHASE1-001` [Phase 1] Corpus inventory, hashing, manifests, stable IDs
+- [x] `PHASE1-002` [Phase 1] Authoritative task count recorded
+- [x] `PHASE10-001` [Phase 10] Windows connectivity + distributed routing
+- [-] `PHASE10-002` [Phase 10] Distributed task router + Windows worker (optional, no current requirement)
+- [x] `PHASE11-001` [Phase 11] Core app vertical slice (landing->trading->withdraw)
+- [x] `PHASE12-001` [Phase 12] CRM/support tickets + admin
+- [x] `PHASE13-001` [Phase 13] UI/UX polish + responsive
+- [x] `PHASE13-002` [Phase 13] Responsive + accessibility polish pass
+- [x] `PHASE14-001` [Phase 14] Test suite
+- [x] `PHASE14-002` [Phase 14] Playwright UI audit (overflow + contrast, 3 widths)
+- [x] `PHASE14-003` [Phase 14] Full-journey Playwright e2e test
+- [x] `PHASE14-004` [Phase 14] Integration tests: actions, DB writes, auth, wallet, CRM
+- [x] `PHASE14-005` [Phase 14] Error-recovery tests
+- [x] `PHASE14-006` [Phase 14] Deployment/build verification test
+- [x] `PHASE15-001` [Phase 15] Security + release readiness
+- [x] `PHASE15-002` [Phase 15] Dependency audit (npm audit triage)
+- [x] `PHASE15-003` [Phase 15] Release readiness checklist + sim/live boundary review
+- [x] `PHASE15-004` [Phase 15] Production Dockerfile + deploy notes
+- [x] `PHASE15-005` [Phase 15] PostgreSQL deploy override + verification
+- [x] `PHASE15-006` [Phase 15] CI workflow (verify + e2e + Docker build)
+- [x] `PHASE15-007` [Phase 15] Terminology cleanup (neutral wording)
+- [x] `PHASE15-008` [Phase 15] Committed Prisma migrations + migrate deploy
+- [x] `PHASE15-009` [Phase 15] Data-model doc accuracy (align with schema)
+- [x] `PHASE15-010` [Phase 15] Doc-sync test (DATA_MODEL vs schema)
+- [x] `PHASE15-011` [Phase 15] Doc-sync tests (routes, scripts, env)
+- [x] `PHASE15-012` [Phase 15] CI job for doc-sync tests
+- [x] `PHASE15-013` [Phase 15] CI Postgres stack job + smoke query
+- [ ] `PHASE16-001` [Phase 16] GitHub/Vercel publish + deploy (blocked: needs explicit user authorization)
+- [x] `PHASE17-001` [Phase 17] Final walkthrough gate (fresh browser session)
+- [x] `OLD-0001` [Phase 2] Audit historical project crypto-payment-backup
+- [x] `OLD-0002` [Phase 2] Audit historical project crypto-portal
+- [x] `OLD-0003` [Phase 2] Audit historical project crypto-portal-backup
+- [x] `OLD-0004` [Phase 2] Audit historical project trading-ai-old
+- [x] `OLD-0005` [Phase 2] Audit historical project web3-dashboard-backup
+- [x] `PHASE2-001` [Phase 2] Historical project audit + reusable extraction
+- [x] `PHASE3-001` [Phase 3] SSD/HDD staging + cleanup policy
+- [-] `PHASE3-002` [Phase 3] Prune verified temporary extraction data on the HDD (optional)
+- [x] `PHASE4-001` [Phase 4] Extraction/scraping framework
+- [x] `PHASE4-002` [Phase 4] Per-file Markdown + global DB ingestion
+- [x] `REPO-0001` [Phase 5] Extract+scrape AI-Trader-main.zip
+- [x] `REPO-0002` [Phase 5] Extract+scrape AI-Trader1-main.zip
+- [x] `REPO-0003` [Phase 5] Extract+scrape Agent-Layer-main.zip
+- [x] `REPO-0004` [Phase 5] Extract+scrape AgentQuant-main.zip
+- [x] `REPO-0005` [Phase 5] Extract+scrape AlphaStock-main.zip
+- [x] `REPO-0006` [Phase 5] Extract+scrape AlphaSuite-main.zip
+- [x] `REPO-0007` [Phase 5] Extract+scrape AutoHedge-main.zip
+- [x] `REPO-0008` [Phase 5] Extract+scrape Awesome-Prediction-Market-Tools-main.zip
+- [x] `REPO-0009` [Phase 5] Extract+scrape Awesome-finance-skills-main.zip
+- [x] `REPO-0010` [Phase 5] Extract+scrape CloddsBot-main.zip
+- [x] `REPO-0011` [Phase 5] Extract+scrape CryptoCards-main.zip
+- [x] `REPO-0012` [Phase 5] Extract+scrape DFDTOKEN-main.zip
+- [x] `REPO-0013` [Phase 5] Extract+scrape Decentralized-Crypto-Debit-Card-main.zip
+- [x] `REPO-0014` [Phase 5] Extract+scrape DeepFund-main.zip
+- [x] `REPO-0015` [Phase 5] Extract+scrape Expert-Advisor-Studio-master.zip
+- [x] `REPO-0016` [Phase 5] Extract+scrape FenixAI_tradingBot-main.zip
+- [x] `REPO-0017` [Phase 5] Extract+scrape FinGPT-master.zip
+- [x] `REPO-0018` [Phase 5] Extract+scrape FinNLP-Progress-master.zip
+- [x] `REPO-0019` [Phase 5] Extract+scrape FinRL-Meta-master.zip
+- [x] `REPO-0020` [Phase 5] Extract+scrape FinRL-master.zip
+- [x] `REPO-0021` [Phase 5] Extract+scrape FriesTrader-main.zip
+- [x] `REPO-0022` [Phase 5] Extract+scrape Harvard-Algorithmic-Trading-with-AI-main.zip
+- [x] `REPO-0023` [Phase 5] Extract+scrape MugglePay-master.zip
+- [x] `REPO-0024` [Phase 5] Extract+scrape Neuberg-main.zip
+- [x] `REPO-0025` [Phase 5] Extract+scrape OctoBot-master.zip
+- [x] `REPO-0026` [Phase 5] Extract+scrape OctoBot_linux_x64
+- [x] `REPO-0027` [Phase 5] Extract+scrape OpenAlice-master.zip
+- [x] `REPO-0028` [Phase 5] Extract+scrape OpenMobius-skill-main.zip
+- [x] `REPO-0029` [Phase 5] Extract+scrape OwnPay-main.zip
+- [x] `REPO-0030` [Phase 5] Extract+scrape Packdraw-Bet-main.zip
+- [x] `REPO-0031` [Phase 5] Extract+scrape PanWatch-main.zip
+- [x] `REPO-0032` [Phase 5] Extract+scrape Payum-2.x.zip
+- [x] `REPO-0033` [Phase 5] Extract+scrape PowerTrader_AI-main.zip
+- [x] `REPO-0034` [Phase 5] Extract+scrape QuantDinger-Vue-main.zip
+- [x] `REPO-0035` [Phase 5] Extract+scrape QuantDinger-main.zip
+- [x] `REPO-0036` [Phase 5] Extract+scrape QuantMuse-main.zip
+- [x] `REPO-0037` [Phase 5] Extract+scrape Stock-Market-AI-GUI-master.zip
+- [x] `REPO-0038` [Phase 5] Extract+scrape Stock_Market_Live_Trading_using_AI-master.zip
+- [x] `REPO-0039` [Phase 5] Extract+scrape SuiteCRM-7.15.2.zip
+- [x] `REPO-0040` [Phase 5] Extract+scrape SuiteCRM-hotfix.zip
+- [x] `REPO-0041` [Phase 5] Extract+scrape TradeMaster-1.0.0.zip
+- [x] `REPO-0042` [Phase 5] Extract+scrape TradingSystem-main.zip
+- [x] `REPO-0043` [Phase 5] Extract+scrape Vibe-Research-main.zip
+- [x] `REPO-0044` [Phase 5] Extract+scrape Vibe-Trading-main.zip
+- [x] `REPO-0045` [Phase 5] Extract+scrape ZELLA-AI-main.zip
+- [x] `REPO-0046` [Phase 5] Extract+scrape a2a-x402-typescript-main.zip
+- [x] `REPO-0047` [Phase 5] Extract+scrape adamant-payment-master.zip
+- [x] `REPO-0048` [Phase 5] Extract+scrape agent_hub-main.zip
+- [x] `REPO-0049` [Phase 5] Extract+scrape agentquant-0.3.0.tar.gz
+- [x] `REPO-0050` [Phase 5] Extract+scrape ai-architecture-main.zip
+- [x] `REPO-0051` [Phase 5] Extract+scrape ai-hedge-fund-crypto-main.zip
+- [x] `REPO-0052` [Phase 5] Extract+scrape ai-trader-main.zip
+- [x] `REPO-0053` [Phase 5] Extract+scrape ai-trading-agent-gemini-main.zip
+- [x] `REPO-0054` [Phase 5] Extract+scrape ai-trading-prototype-master.zip
+- [x] `REPO-0055` [Phase 5] Extract+scrape ai-workflow-main.zip
+- [x] `REPO-0056` [Phase 5] Extract+scrape ai_quant_trade-master.zip
+- [x] `REPO-0057` [Phase 5] Extract+scrape ai_trader-0.3.3.tar.gz
+- [x] `REPO-0058` [Phase 5] Extract+scrape aioquant-master.zip
+- [x] `REPO-0059` [Phase 5] Extract+scrape alltick-realtime-forex-crypto-stock-tick-finance-websocket-api-main.zip
+- [x] `REPO-0060` [Phase 5] Extract+scrape alpaca-skills-main.zip
+- [x] `REPO-0061` [Phase 5] Extract+scrape artificial-intelligence-for-trading-master.zip
+- [x] `REPO-0062` [Phase 5] Extract+scrape awesome-deep-trading-master.zip
+- [x] `REPO-0063` [Phase 5] Extract+scrape awesome-quant-ai-main.zip
+- [x] `REPO-0064` [Phase 5] Extract+scrape awesome-trading-agents-master.zip
+- [x] `REPO-0065` [Phase 5] Extract+scrape beancount-io-main.zip
+- [x] `REPO-0066` [Phase 5] Extract+scrape benthos-collector_linux_amd64.tar.gz
+- [x] `REPO-0067` [Phase 5] Extract+scrape blnk-main.zip
+- [x] `REPO-0068` [Phase 5] Extract+scrape cardfi-main.zip
+- [x] `REPO-0069` [Phase 5] Extract+scrape chart-analyzer-main.zip
+- [x] `REPO-0070` [Phase 5] Extract+scrape clodds.tgz
+- [x] `REPO-0071` [Phase 5] Extract+scrape coinbase-pro-node-main.zip
+- [x] `REPO-0072` [Phase 5] Extract+scrape coinlib-master.zip
+- [x] `REPO-0073` [Phase 5] Extract+scrape composer-signals-alpaca-master.zip
+- [x] `REPO-0074` [Phase 5] Extract+scrape composer-trade-mcp-main.zip
+- [x] `REPO-0075` [Phase 5] Extract+scrape core-banking-prototype-laravel-main.zip
+- [x] `REPO-0076` [Phase 5] Extract+scrape crypto-ai-trading-bot-main.zip
+- [x] `REPO-0077` [Phase 5] Extract+scrape cryptocoin_payable-1.4.5.tar.gz
+- [x] `REPO-0078` [Phase 5] Extract+scrape cryptocoin_payable-master.zip
+- [x] `REPO-0079` [Phase 5] Extract+scrape cryptopay-web-master.zip
+- [x] `REPO-0080` [Phase 5] Extract+scrape cryptopayserver-master.zip
+- [x] `REPO-0081` [Phase 5] Extract+scrape cryptoquant-ai-master.zip
+- [x] `REPO-0082` [Phase 5] Extract+scrape data_cache-v1.0.28.tar.gz
+- [x] `REPO-0083` [Phase 5] Extract+scrape dist.tar.gz
+- [x] `REPO-0084` [Phase 5] Extract+scrape django-cryptocurrency-payment-master.zip
+- [x] `REPO-0085` [Phase 5] Extract+scrape erpnext-develop.zip
+- [x] `REPO-0086` [Phase 5] Extract+scrape example-scalping-master.zip
+- [x] `REPO-0087` [Phase 5] Extract+scrape fintech-clone-react-native-main.zip
+- [x] `REPO-0088` [Phase 5] Extract+scrape fintech-engineering-handbook-main.zip
+- [x] `REPO-0089` [Phase 5] Extract+scrape fixpro-6.0.jar
+- [x] `REPO-0090` [Phase 5] Extract+scrape forex-trading-ai-agent-main.zip
+- [x] `REPO-0091` [Phase 5] Extract+scrape github-main.zip
+- [x] `REPO-0092` [Phase 5] Extract+scrape global-stock-data-main.zip
+- [x] `REPO-0093` [Phase 5] Extract+scrape goipay-master.zip
+- [x] `REPO-0094` [Phase 5] Extract+scrape hyperswitch-main.zip
+- [x] `REPO-0095` [Phase 5] Extract+scrape idurar-erp-crm-master.zip
+- [x] `REPO-0096` [Phase 5] Extract+scrape jev-trader-main.zip
+- [x] `REPO-0097` [Phase 5] Extract+scrape kalshi-ai-trading-bot-main.zip
+- [x] `REPO-0098` [Phase 5] Extract+scrape laravel-crm-2.2.zip
+- [x] `REPO-0099` [Phase 5] Extract+scrape laravel-crypto-payment-gateway-main.zip
+- [x] `REPO-0100` [Phase 5] Extract+scrape lazerpay-laravelsdk-main.zip
+- [x] `REPO-0101` [Phase 5] Extract+scrape lazerpay-react-native-master.zip
+- [x] `REPO-0102` [Phase 5] Extract+scrape llm-agent-trader-master.zip
+- [x] `REPO-0103` [Phase 5] Extract+scrape longbridge-terminal-darwin-amd64.tar.gz
+- [x] `REPO-0104` [Phase 5] Extract+scrape longbridge-terminal-main.zip
+- [x] `REPO-0105` [Phase 5] Extract+scrape lucid-agents-master.zip
+- [x] `REPO-0106` [Phase 5] Extract+scrape lumibot-dev.zip
+- [x] `REPO-0107` [Phase 5] Extract+scrape macro-main.zip
+- [x] `REPO-0108` [Phase 5] Extract+scrape monica-assets-v4.1.2.tar.bz2
+- [x] `REPO-0109` [Phase 5] Extract+scrape monica-main.zip
+- [x] `REPO-0110` [Phase 5] Extract+scrape monica-v4.1.2.tar.bz2
+- [x] `REPO-0111` [Phase 5] Extract+scrape moss-trade-bot-skills-main.zip
+- [x] `REPO-0112` [Phase 5] Extract+scrape nocobase-main.zip
+- [x] `REPO-0113` [Phase 5] Extract+scrape nof1-tracker-master.zip
+- [x] `REPO-0114` [Phase 5] Extract+scrape nof1.ai-main.zip
+- [x] `REPO-0115` [Phase 5] Extract+scrape nofx-dev.zip
+- [x] `REPO-0116` [Phase 5] Extract+scrape open-nof1.ai-master.zip
+- [x] `REPO-0117` [Phase 5] Extract+scrape openapi.json
+- [x] `REPO-0118` [Phase 5] Extract+scrape openmeter-main.zip
+- [x] `REPO-0119` [Phase 5] Extract+scrape opennews-mcp-main.zip
+- [x] `REPO-0120` [Phase 5] Extract+scrape ownpay-0.2.0.zip
+- [x] `REPO-0121` [Phase 5] Extract+scrape payment-sdk-php-main.zip
+- [x] `REPO-0122` [Phase 5] Extract+scrape platform-develop.zip
+- [x] `REPO-0123` [Phase 5] Extract+scrape prism-insight-main.zip
+- [x] `REPO-0124` [Phase 5] Extract+scrape qlib-main.zip
+- [x] `REPO-0125` [Phase 5] Extract+scrape react-native-credit-card-input-main.zip
+- [x] `REPO-0126` [Phase 5] Extract+scrape react-plotly.js-main.zip
+- [x] `REPO-0127` [Phase 5] Extract+scrape shkeeper.io-main.zip
+- [x] `REPO-0128` [Phase 5] Extract+scrape sollidaLinux.zip
+- [x] `REPO-0129` [Phase 5] Extract+scrape sollidacore-master.zip
+- [x] `REPO-0130` [Phase 5] Extract+scrape stock-analysis-engine-master.zip
+- [x] `REPO-0131` [Phase 5] Extract+scrape stock-market-signal-automation-main.zip
+- [x] `REPO-0132` [Phase 5] Extract+scrape tai-main.zip
+- [x] `REPO-0133` [Phase 5] Extract+scrape trade-journal-main.zip
+- [x] `REPO-0134` [Phase 5] Extract+scrape trade-skills-main.zip
+- [x] `REPO-0135` [Phase 5] Extract+scrape tradememory-protocol-master.zip
+- [x] `REPO-0136` [Phase 5] Extract+scrape tradingbot-main.zip
+- [x] `REPO-0137` [Phase 5] Extract+scrape trendspider-master.zip
+- [x] `REPO-0138` [Phase 5] Extract+scrape trendspider_scripts-main.zip
+- [x] `REPO-0139` [Phase 5] Extract+scrape twenty-main.zip
+- [x] `REPO-0140` [Phase 5] Extract+scrape vibe-investing-main.zip
+- [x] `REPO-0141` [Phase 5] Extract+scrape walty-main.zip
+- [x] `REPO-0142` [Phase 5] Extract+scrape web3-payments-master.zip
+- [x] `REPO-0143` [Phase 5] Extract+scrape yoomoney-api-master.zip
+- [x] `REPO-0144` [Phase 5] Extract+scrape zella-docs-main.zip
+- [x] `REPO-0145` [Phase 5] Extract+scrape zella-node-main.zip
+- [x] `REPO-0146` [Phase 5] Extract+scrape zella-py-main.zip
+- [x] `PHASE6-001` [Phase 6] Central knowledge synthesis
+- [x] `PHASE7-001` [Phase 7] Product requirements + architecture docs
+- [x] `PHASE8-001` [Phase 8] Branding / name suggestions
+- [x] `PHASE9-001` [Phase 9] API credential requirements doc

@@ -1,0 +1,51 @@
+# PostgreSQL override for docker-compose.yml — swaps the bundled SQLite volume
+# for a Postgres service and rebuilds the app image with the `postgresql`
+# datasource provider.
+#
+#   cd apps/web
+#   export POSTGRES_PASSWORD="$(openssl rand -hex 16)"
+#   echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> .env
+#   COMPOSE="docker compose -f docker-compose.yml -f docker-compose.postgres.yml"
+#   $COMPOSE run --rm init      # create schema + seed sample accounts
+#   $COMPOSE up -d              # start web + db
+#
+# See docs/DEPLOYMENT.md.
+
+services:
+  web:
+    build:
+      args:
+        DB_PROVIDER: postgresql
+    environment:
+      DATABASE_URL: postgresql://veylora:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/veylora
+    depends_on:
+      db:
+        condition: service_healthy
+
+  init:
+    build:
+      args:
+        DB_PROVIDER: postgresql
+    environment:
+      DATABASE_URL: postgresql://veylora:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/veylora
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: veylora
+      POSTGRES_USER: veylora
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U veylora -d veylora"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pg-data:

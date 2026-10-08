@@ -1,0 +1,60 @@
+{
+  "name": "veylora-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/domain.test.ts tests/market.test.ts",
+    "test:integration": "vitest run tests/integration",
+    "test:docs": "vitest run tests/docs.test.ts",
+    "test:e2e": "playwright test",
+    "verify:deploy": "npm run build && npm test",
+    "test:ui-audit": "playwright test tests/e2e/ui-audit.spec.ts",
+    "db:deploy": "prisma migrate deploy",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma migrate reset --force && tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.7.0",
+    "next": "16.4.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "zod": "^4.4.3"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^24.19.1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "prisma": "^6.7.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.19.2",
+    "typescript": "^5",
+    "vitest": "^5.0.3"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "prisma@6.19.3": true,
+    "esbuild@0.28.2": true
+  }
+}

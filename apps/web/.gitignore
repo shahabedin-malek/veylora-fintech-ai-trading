@@ -1,0 +1,27 @@
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# local secrets + local database
+.env
+.env.local
+.env*.local
+*.db
+*.db-journal
+prisma/dev.db*
+
+# generated
+src/generated/
+
+# playwright artifacts
+reports/
+test-results/
+playwright-report/
+
+# ephemeral local Postgres used for verification
+.tmp-pgdata/
+.tmp-pgsock/
+prisma/.tmp.pg.prisma

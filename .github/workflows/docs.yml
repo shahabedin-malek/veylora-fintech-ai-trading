@@ -1,0 +1,37 @@
+name: Docs
+
+# Doc drift is cheap to detect, so the doc-sync checks run on every push to any
+# branch and on PRs. The heavier build/e2e/docker jobs stay main-only (ci.yml).
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: apps/web
+
+jobs:
+  docs:
+    name: Docs in sync with code
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Doc-sync tests (models, routes, scripts, env)
+        run: npm run test:docs

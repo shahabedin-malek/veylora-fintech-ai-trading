@@ -1,0 +1,38 @@
+# Local research checkpoint data; regenerate from scripts/research_inventory.py
+research-data/
+
+# Python bytecode caches
+__pycache__/
+*.py[cod]
+
+# Bulk corpus sources (multi-GB) — kept on disk, not in version control
+old/
+repo/
+
+# Corpus outputs (database, manifests, scraped knowledge) — regenerable
+data/
+
+# Pipeline logs
+logs/
+
+# Dependencies and build output
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets
+.env
+.env.local
+.env*.local
+**/.env
+
+# Local databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
