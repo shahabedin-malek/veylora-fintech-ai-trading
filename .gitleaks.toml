@@ -1,0 +1,29 @@
+# gitleaks configuration (CI secret scan).
+#
+# Extends the default ruleset and allow-lists the places in this repository that
+# legitimately contain *placeholder* or *vendor example* values, so the scan stays
+# high-signal. A real credential anywhere else still fails the build.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known placeholders, test fixtures and vendor documentation"
+paths = [
+  '''coinbase/docs/.*''',
+  '''apps/web/tests/.*''',
+  '''apps/web/\.env\.example''',
+  '''docs/NEWS_SOURCES\.md''',
+  '''docs/CDP_ONRAMP_TICKET_REPLY\.md''',
+  '''docs/COINBASE_ONRAMP_READINESS\.md''',
+  '''rss/.*''',
+  '''apps/web/scripts/scan-secrets\.mjs''',
+  '''\.gitleaks\.toml''',
+]
+regexes = [
+  '''your_key_here''',
+  '''your-key-here''',
+  '''replace-with-32-byte-random-string''',
+  '''whsec_0123456789abcdef''',
+  '''ci-only-not-a-real-secret''',
+]

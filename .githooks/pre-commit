@@ -1,0 +1,15 @@
+#!/bin/sh
+# Pre-commit secret guard.
+#
+# Enable once per clone (it is a local git setting, not committed):
+#     git config core.hooksPath .githooks
+#
+# Uses gitleaks when it is installed, and the dependency-free scanner instead when it is
+# not, so the check runs either way. A deliberate bypass is `git commit --no-verify`.
+set -e
+
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --config .gitleaks.toml
+else
+  node apps/web/scripts/scan-secrets.mjs --staged
+fi

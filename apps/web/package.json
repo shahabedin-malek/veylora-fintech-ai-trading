@@ -18,6 +18,7 @@
     "smoke:coinbase": "vitest run tests/coinbase.live.test.ts",
     "check:coinbase-credentials": "tsx scripts/coinbase-credentials.ts",
     "check:provider-keys": "tsx scripts/provider-keys.ts",
+    "scan:secrets": "node scripts/scan-secrets.mjs",
     "verify:deploy": "npm run build && npm test",
     "test:ui-audit": "playwright test tests/e2e/ui-audit.spec.ts",
     "db:deploy": "prisma migrate deploy",

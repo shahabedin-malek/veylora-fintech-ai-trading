@@ -88,6 +88,9 @@ Two workflows run once the repo is pushed (publishing is blocked until authorize
   (boot the Postgres override, apply migrations + seed, run a smoke query).
 - **`.github/workflows/docs.yml`** — every branch push and PR. **docs**: the
   doc-sync tests (models, routes, scripts and env vars stay matching the code).
+- **`.github/workflows/secrets.yml`** — every push and PR. **gitleaks**: scans commits for
+  leaked credentials (config in `.gitleaks.toml`); the same check runs locally via
+  `npm run scan:secrets` and the `.githooks/pre-commit` hook.
 
 ## Machine plan
 

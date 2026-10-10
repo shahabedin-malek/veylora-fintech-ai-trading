@@ -823,3 +823,16 @@ hold or a ban.**
   `.env*`, `*.txt`, `*.key`, keys and the corpus from a deploy upload.
 - **Verification.** Typecheck clean; `npm test` **439 passed / 5 skipped (46 files, 444 tests)**;
   `npm run build` clean (27 routes incl. `/coinbase`).
+
+## 2026-10-10 — secret-scan guard + public status page (hand-written note)
+
+- **Secret-scan guard.** `.gitleaks.toml` (extends defaults + allow-lists known placeholders/vendor
+  docs), `.github/workflows/secrets.yml` (gitleaks on every push/PR), and a dependency-free local
+  scanner `apps/web/scripts/scan-secrets.mjs` (`npm run scan:secrets`) wired into a `.githooks/pre-commit`
+  hook (enable with `git config core.hooksPath .githooks`). Verified clean on the working tree.
+- **Public status page.** `/status` reports which integrations are configured — **presence only,
+  never a value** — from a pure helper `src/lib/status.ts` (routes, custody, onramp/offramp, venue,
+  webhooks, cron, key pool, signals providers, compliance). `tests/status.test.ts` pins that it never
+  returns a value and is honest about a missing required item.
+- **Verification.** Typecheck clean; `npm test` **446 passed / 5 skipped (47 files, 451 tests)**;
+  `npm run build` clean (28 routes incl. `/status`). README test count 444 → 451 / 47 files.

@@ -41,7 +41,7 @@ npm run dev        # dev server
 npm run build      # prisma generate + next build
 npm run start      # production server
 npm run typecheck  # tsc --noEmit
-npm test                 # all vitest: unit + integration (444 tests across 46 files; 5 live tests skip without credentials)
+npm test                 # all vitest: unit + integration (451 tests across 47 files; 5 live tests skip without credentials)
 npm run test:unit        # market + owner units only (no database)
 npm run test:integration # server actions + real DB writes (throwaway SQLite)
 npm run test:docs        # docs stay in sync with code (models, routes, scripts, env)
@@ -50,6 +50,7 @@ npm run test:owner-gating # playwright: no owner-only surface renders for a non-
 npm run smoke:coinbase   # live onramp/offramp + webhook smoke (skipped unless COINBASE_LIVE=1)
 npm run check:coinbase-credentials # Coinbase credential hygiene check (operator CLI)
 npm run check:provider-keys # live provider smoke test (read-only; never prints a key)
+npm run scan:secrets # high-signal secret scan of the working tree (also the pre-commit hook)
 npm run verify:deploy    # production build + full vitest suite (release gate)
 npm run db:deploy  # apply committed migrations (deploy)
 npm run db:migrate # create a new migration (development)
@@ -80,6 +81,7 @@ npm run db:reset   # reset + re-seed
 | `/admin/credentials` | Provider key pool (add/rotate encrypted API keys per provider) + live provider health/smoke + Coinbase credential hygiene (admins only) |
 | `/faq` | Frequently asked questions |
 | `/coinbase` | Public overview of the Coinbase Onramp/Offramp integration and security posture |
+| `/status` | Public status: which integrations are configured (presence only, never a value) |
 
 ## Architecture
 
@@ -120,7 +122,7 @@ See `../../docs/ARCHITECTURE.md` and `../../docs/DATA_MODEL.md`.
 
 ## Safety
 
-- Secrets live only in `.env` (git-ignored).
+- Secrets live only in `.env` (git-ignored). A **secret scan** runs in CI (`.github/workflows/secrets.yml`, gitleaks) and locally via `npm run scan:secrets`; enable the pre-commit hook once per clone with `git config core.hooksPath .githooks`.
 - `SESSION_SECRET` signs the httpOnly session cookie; in production the app
   refuses to sign with a missing or weak secret (fails closed).
 - Sign-in is by wallet: the signed-in **network decides the mode** — a mainnet
