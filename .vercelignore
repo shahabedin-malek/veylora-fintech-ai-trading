@@ -34,6 +34,15 @@ test-results/
 *.pem
 *.key
 *.p8
+*.p12
+# Files whose extension the patterns above do not cover but which still carry
+# credentials. Keep this list in step with the root .gitignore.
+/signals/
+cdp_api_key*.json
+cdp*wallet*secret*
+cdp_wallet_secret*
+pg_service.conf
+*.pg_service.conf
 
 # Research exports / knowledge base: not needed to build the app.
 # Anchor to the repository root — an unanchored `coinbase/` would also exclude the
