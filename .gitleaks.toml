@@ -21,9 +21,15 @@ paths = [
   '''\.gitleaks\.toml''',
 ]
 regexes = [
-  '''your_key_here''',
-  '''your-key-here''',
-  '''replace-with-32-byte-random-string''',
+  '''(?i)your[_-]?key''',
+  '''(?i)your-key''',
+  '''(?i)replace[-_]with''',
+  '''(?i)placeholder''',
+  '''(?i)change[-_]?me''',
+  '''(?i)example''',
+  '''(?i)dummy''',
+  '''(?i)sample[-_]?key''',
+  '''(?i)redact''',
   '''whsec_0123456789abcdef''',
   '''ci-only-not-a-real-secret''',
 ]

@@ -836,3 +836,16 @@ hold or a ban.**
   returns a value and is honest about a missing required item.
 - **Verification.** Typecheck clean; `npm test` **446 passed / 5 skipped (47 files, 451 tests)**;
   `npm run build` clean (28 routes incl. `/status`). README test count 444 → 451 / 47 files.
+
+## 2026-10-10 — production env vars set + redeploy (hand-written note)
+
+- **Set on Vercel production and redeployed:** `CRON_SECRET` (generated) — enables the
+  `/api/cron/*` routes; `CREDENTIAL_ENCRYPTION_KEY` (generated, `openssl rand -base64 32`) —
+  enables the provider key pool; `OWNER_WALLET_ADDRESSES` (from `apps/web/.env`) — owner
+  controls. Deploy aliased to `https://veylora-fintech-ai-trading.vercel.app`.
+- **Verified live** at `/status`: **8/17** configured — core (datastore, session), custody,
+  Coinbase Onramp/Offramp, scheduled jobs, provider key pool, owner controls, keyless market data.
+- **Not set (deliberate):** the keyed signal/market provider keys and `WUNDERTRADING_*` /
+  `FINNHUB_WEBHOOK_SECRET` / `COINBASE_WEBHOOK_SECRET`. Their only local source is the
+  compromised `signals/signals.txt` hand-off; per `OPEN_TASKS §1` every key there must be
+  **rotated first**. Setting fresh keys is a follow-up once regenerated.

@@ -32,12 +32,15 @@ reply drafts — lives in `docs/COINBASE_ONRAMP_READINESS.md`.
       `20261010180000_signal_events`, `20261010200000_provider_credentials`,
       `20261010210000_credential_usage`. Use `npm run db:deploy` with the migrations
       directory swap described in `docs/DEPLOYMENT.md`.
-- [ ] **Set the production env vars** that code now reads but the deployment lacks:
-      `CRON_SECRET` (Vercel cron), `WUNDERTRADING_API_KEY` / `WUNDERTRADING_SECRET_KEY`,
-      `VENUE_MAX_PER_TX_USD` / `VENUE_DAILY_LIMIT_USD`, `CREDENTIAL_ENCRYPTION_KEY`
-      (`openssl rand -base64 32` — without it the key pool is disabled), `ALTFINS_API_KEY`,
-      `FREECRYPTOAPI_API_KEY`, `COINMARKETCAP_API_KEY`, `FINNHUB_API_KEY`,
-      `FINNHUB_WEBHOOK_SECRET`, and `OWNER_WALLET_ADDRESSES`.
+- [x] **Production secrets — done in part.** `CRON_SECRET` (generated),
+      `CREDENTIAL_ENCRYPTION_KEY` (generated) and `OWNER_WALLET_ADDRESSES` are now set on Vercel
+      production and the app redeployed; `/status` reports them configured.
+- [ ] **Production secrets — remaining (rotate first, then set).** `ALTFINS_API_KEY`,
+      `FREECRYPTOAPI_API_KEY`, `TAAPI_API_KEY`, `COINMARKETCAP_API_KEY`, `FINNHUB_API_KEY`,
+      `FINNHUB_WEBHOOK_SECRET`, `COINBASE_WEBHOOK_SECRET`, `WUNDERTRADING_API_KEY` /
+      `WUNDERTRADING_SECRET_KEY`, `VENUE_MAX_PER_TX_USD` / `VENUE_DAILY_LIMIT_USD`. Deliberately
+      **not** copied from `signals/signals.txt`: every key there must be regenerated at the
+      provider first (see the next item).
 - [ ] **Rotate every key that lived in `signals/signals.txt`.** That file carried live
       keys and was untracked-but-not-ignored until it was added to `.gitignore`; treat
       every key in it as compromised. TAAPI.IO's supplied key is inactive (401) and
