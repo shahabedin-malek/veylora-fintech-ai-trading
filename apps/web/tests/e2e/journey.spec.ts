@@ -1,117 +1,135 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type BrowserContext } from "@playwright/test";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { PrismaClient } from "@prisma/client";
+import { SESSION_COOKIE, createToken } from "../../src/lib/session-token";
+import { SEEDED_ACCOUNTS, SEEDED_CHAIN_ID } from "../../prisma/seed-accounts";
 
 /**
- * Full-journey test, end to end through the real UI:
+ * Full-journey test, end to end through the real UI — the **real-funds** product:
  *
- *   register -> sign out -> log in
- *   -> deposit simulated funds  (STATE 1 -> STATE 2)
- *   -> start trading            (STATE 2 -> STATE 3)
- *   -> force stop (< 5 min)     (STATE 3 -> STATE 4)
- *   -> withdraw (simulated fee breakdown)
- *   -> open a support ticket
- *   -> admin replies, customer sees it
+ *   sign in -> dashboard (mainnet account)
+ *           -> wallet (real Coinbase on/off-ramp + on-chain custody surfaces)
+ *           -> trade desk (custody-signed Coinbase swap surface)
+ *           -> history (transactions / ledger / Coinbase reconciliation)
+ *           -> open a support ticket
+ *           -> admin replies, customer sees it
  *
- * A fresh account is created per run so the journey is deterministic and
- * re-runnable. It is deleted afterwards.
+ * The app moves real funds, so there is no deposit/withdraw/swap to execute without
+ * live custody and Coinbase credentials — those money paths are gated and are covered
+ * by the integration suite (which mocks only the provider SDK). This journey proves
+ * the surfaces and the CRM loop, and asserts that no owner-only practice control ever
+ * leaks to an ordinary account.
+ *
+ * Sign-in is wallet-based (SIWE), which cannot be driven from Playwright without a
+ * wallet extension — so the session cookie is minted with the app's own signer for a
+ * fresh account on a mainnet chain. That still exercises the real session verification
+ * on every request; the signature flow itself is covered by the integration SIWE suite
+ * and the wallet-connect surface is asserted in `login-wallet.spec.ts`.
+ *
+ * A fresh account is created per run so the journey is deterministic and re-runnable.
+ * It is deleted afterwards.
  */
 
+/** Mirrors the playwright webServer host, which the session cookie is scoped to. */
+const HOST = "127.0.0.1";
+
 const RUN = Date.now();
-const EMAIL = `journey+${RUN}@veylora.dev`;
-const PASSWORD = "journey-pass-123";
+const LABEL = `journey+${RUN}`;
 const NAME = "Journey Tester";
 
-const ADMIN_EMAIL = "admin@veylora.dev";
-const ADMIN_PASSWORD = "admin12345";
-
-const DEPOSIT_USD = 100;
-
-async function loginAs(page: Page, email: string, password: string) {
-  await page.goto("/login");
-  await page.locator("#login-email").fill(email);
-  await page.locator("#login-password").fill(password);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+function readEnv(): Record<string, string> {
+  const out: Record<string, string> = {};
+  const file = join(process.cwd(), ".env");
+  if (!existsSync(file)) return out;
+  for (const line of readFileSync(file, "utf8").split("\n")) {
+    if (!line.includes("=") || line.trim().startsWith("#")) continue;
+    const i = line.indexOf("=");
+    out[line.slice(0, i).trim()] = line.slice(i + 1).trim().replace(/^"|"$/g, "");
+  }
+  return out;
 }
 
-test("full journey: register → login → deposit → trade → force stop → withdraw → ticket → admin reply", async ({
+/** A deterministic wallet address for a throwaway account. */
+function walletFor(label: string): string {
+  return `0x${createHash("sha256").update(label).digest("hex").slice(0, 40)}`;
+}
+
+async function signInAs(context: BrowserContext, userId: string): Promise<void> {
+  await context.addCookies([
+    { name: SESSION_COOKIE, value: createToken(userId, SEEDED_CHAIN_ID), domain: HOST, path: "/" },
+  ]);
+}
+
+test("full journey: sign in → dashboard → wallet → trade → history → ticket → admin reply", async ({
   page,
   browser,
 }) => {
   test.setTimeout(300_000);
   const replyText = `Automated reply ${RUN}`;
 
+  // The .env file is gitignored, so CI supplies the secret as an env var.
+  const secret = process.env.SESSION_SECRET ?? readEnv().SESSION_SECRET;
+  expect(secret, "SESSION_SECRET must be set (apps/web/.env or the environment)").toBeTruthy();
+  process.env.SESSION_SECRET = secret;
+
+  const prisma = new PrismaClient();
+  const address = walletFor(LABEL);
+
+  // Sign-in itself is covered elsewhere; start from a provisioned account.
+  const user = await prisma.user.create({
+    data: {
+      walletAddress: address,
+      chainId: SEEDED_CHAIN_ID,
+      name: NAME,
+      role: "USER",
+      customer: { create: { name: NAME } },
+      wallet: { create: { address, kind: "MAINNET", network: "mainnet" } },
+    },
+  });
+  const admin = await prisma.user.findUnique({
+    where: { walletAddress: SEEDED_ACCOUNTS.admin.address },
+  });
+  expect(admin, "seeded admin required — run `npm run db:seed` first").toBeTruthy();
+
   try {
-    /* ------------------------------------------------ 1. register (fresh) */
-    await page.goto("/login");
-    await page.locator("#reg-name").fill(NAME);
-    await page.locator("#reg-email").fill(EMAIL);
-    await page.locator("#reg-password").fill(PASSWORD);
-    await page.getByRole("button", { name: "Create account" }).click();
+    /* ------------------------------------------------ 1. signed in */
+    await signInAs(page.context(), user.id);
+    await page.goto("/dashboard");
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByRole("heading", { name: new RegExp(NAME.split(" ")[0], "i") })).toBeVisible();
+    await expect(page.getByText(/Mainnet account/i)).toBeVisible();
+    await expect(page.getByText("Account balance")).toBeVisible();
 
-    /* ------------------------------------------------ 2. sign out + log in */
-    await page.getByRole("button", { name: "Sign out" }).click();
-    await expect(page).toHaveURL(/\/$/);
-
-    await loginAs(page, EMAIL, PASSWORD);
-    await expect(page).toHaveURL(/\/dashboard/);
-    await expect(page.getByText("Simulated balance")).toBeVisible();
-
-    // STATE 1: signed in, no funds -> Start trading must be disabled.
-    await expect(page.getByRole("button", { name: /Start trading/ })).toHaveCount(0);
-
-    /* ------------------------------------------------ 3. deposit funds */
+    /* ------------------------------------------------ 2. wallet surfaces */
     await page.goto("/wallet");
-    await page.locator("#amount").fill(String(DEPOSIT_USD));
-    await page.getByRole("button", { name: "Deposit simulated funds" }).click();
-    await expect(page.getByText("$100.00").first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Wallet$/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Balance" })).toBeVisible();
+    // Real funding paths: a Coinbase-hosted deposit/withdrawal and on-chain custody.
+    await expect(page.getByRole("heading", { name: /Deposit with Coinbase/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Withdraw with Coinbase/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Deposit & withdraw on-chain/i })).toBeVisible();
+    // No owner-only practice surface leaks to an ordinary account.
+    await expect(page.getByText(/practice funds/i)).toHaveCount(0);
 
-    // STATE 2: funded -> Start trading becomes available.
-    await page.goto("/dashboard");
-    const startBtn = page.getByRole("button", { name: /Start trading/ });
-    await expect(startBtn).toBeVisible();
-
-    /* ------------------------------------------------ 4. start trading */
-    await startBtn.click();
-    // STATE 3 confirmed on the dashboard itself: Start becomes Stop.
-    await expect(page.getByRole("button", { name: /Stop trading/ })).toBeVisible();
-
+    /* ------------------------------------------------ 3. trade desk */
     await page.goto("/trade");
     await expect(page).toHaveURL(/\/trade/);
-    // STATE 3: withdrawal is blocked while trading.
-    const stopBtn = page.getByRole("button", { name: /Stop trading/ });
-    await expect(stopBtn).toBeVisible();
-    await expect(page.getByText(/Trading is active/)).toBeVisible();
-    await expect(page.getByText("Simulated activity stream")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Trading desk/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Coinbase swap/i })).toBeVisible();
 
-    /* ------------------------------- 5. force stop (inside the 5-min guard) */
-    await stopBtn.click();
-    // A warning dialog appears with a Force Stop action.
-    const warning = page.getByRole("alertdialog", { name: /Stop trading warning/ });
-    await expect(warning).toBeVisible();
-    await warning.getByRole("button", { name: "Force Stop" }).click();
-
-    // STATE 4: stopped -> Start is available again.
-    await expect(page.getByRole("button", { name: /Start trading/ })).toBeVisible();
-
-    /* ------------------------------------------------ 6. withdraw */
-    await page.goto("/wallet");
-    const withdrawBtn = page.getByRole("button", { name: /^Withdraw/ });
-    await expect(withdrawBtn).toBeEnabled();
-    await expect(page.getByText("Withdrawal total")).toBeVisible();
-    await expect(page.getByText(/Simulated fee/)).toBeVisible();
-    await withdrawBtn.click();
-    await expect(page.getByText("$0.00").first()).toBeVisible();
-
-    // The withdrawal is recorded in history.
+    /* ------------------------------------------------ 4. history */
     await page.goto("/history");
-    await expect(page.getByText("WITHDRAWAL").first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^History$/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Transactions$/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Ledger$/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Coinbase reconciliation/i })).toBeVisible();
 
-    /* ------------------------------------------------ 7. support ticket */
+    /* ------------------------------------------------ 5. support ticket */
     await page.goto("/support");
     const subject = `Journey ticket ${RUN}`;
-    const body = "I stopped trading — where do I withdraw?";
+    const body = "I have a question about a withdrawal.";
     await page.locator("#subject").fill(subject);
     await page.locator("#body").fill(body);
     await page.getByRole("button", { name: "Start conversation" }).click();
@@ -122,11 +140,11 @@ test("full journey: register → login → deposit → trade → force stop → 
     await expect(page.getByRole("heading", { name: subject })).toBeVisible();
     await expect(page.getByText(body)).toBeVisible();
 
-    /* ------------------------------------------------ 8. admin replies */
+    /* ------------------------------------------------ 6. admin replies */
     const adminContext = await browser.newContext();
+    await signInAs(adminContext, admin!.id);
     const adminPage = await adminContext.newPage();
-    await loginAs(adminPage, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(adminPage).toHaveURL(/\/admin/);
+    await adminPage.goto("/admin");
     await expect(adminPage.getByRole("heading", { name: "CRM console" })).toBeVisible();
 
     // The ticket is visible in the console...
@@ -136,8 +154,6 @@ test("full journey: register → login → deposit → trade → force stop → 
     await adminPage.goto(`/admin/tickets/${ticketId}`);
     await adminPage.locator("#priority").selectOption("HIGH");
     await adminPage.locator("#body").fill(replyText);
-    // The form is a Next server action: wait for its POST to settle before
-    // reloading, otherwise the reload can race the in-flight write.
     await Promise.all([
       adminPage.waitForResponse(
         (r) => r.request().method() === "POST" && r.url().includes(`/admin/tickets/${ticketId}`)
@@ -145,25 +161,19 @@ test("full journey: register → login → deposit → trade → force stop → 
       adminPage.getByRole("button", { name: "Update ticket" }).click(),
     ]);
 
-    // Reload so the assertions read a fresh server render (uncontrolled inputs
-    // would otherwise mask whether the change actually persisted).
     await adminPage.reload();
     await expect(adminPage.getByText(replyText)).toBeVisible();
     await expect(adminPage.locator("#priority")).toHaveValue("HIGH");
     await adminContext.close();
 
-    /* ------------------------------- 9. customer sees the admin reply */
+    /* ------------------------------- 7. customer sees the admin reply */
     await page.goto(`/support?ticket=${ticketId}`);
     await expect(page.getByText(replyText)).toBeVisible();
   } finally {
     // Clean up the throwaway account (cascades to wallet/ledger/tickets/messages).
-    const prisma = new PrismaClient();
     try {
-      const user = await prisma.user.findUnique({ where: { email: EMAIL } });
-      if (user) {
-        await prisma.auditLog.deleteMany({ where: { actorId: user.id } });
-        await prisma.user.delete({ where: { id: user.id } });
-      }
+      await prisma.auditLog.deleteMany({ where: { actorId: user.id } });
+      await prisma.user.delete({ where: { id: user.id } });
     } finally {
       await prisma.$disconnect();
     }

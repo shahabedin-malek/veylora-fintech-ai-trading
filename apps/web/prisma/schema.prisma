@@ -12,16 +12,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Wallet-authenticated: identity is the connected address (SIWE / EIP-4361).
+// There is no email or password — see docs/NETWORK_BOUNDARY.md.
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  role         String   @default("USER") // USER | ADMIN
-  createdAt    DateTime @default(now())
+  id            String   @id @default(cuid())
+  walletAddress String   @unique // lower-cased 0x address
+  chainId       Int? // chain the address last signed in on
+  name          String
+  role          String   @default("USER") // USER | ADMIN
+  // Banned: refused at sign-in and treated as signed out on every request. Set only by an
+  // admin, with a reason and an audit entry, after a documented review — never
+  // automatically. A ban stops access; it does not move or forfeit the balance (see
+  // Wallet.blocked).
+  banned        Boolean  @default(false)
+  bannedReason  String?
+  bannedAt      DateTime?
+  createdAt     DateTime @default(now())
 
   wallet        Wallet?
   customer      Customer?
+  withdrawalRequests  WithdrawalRequest[] @relation("WithdrawalRequester")
+  withdrawalDecisions WithdrawalRequest[] @relation("WithdrawalDecider")
   ledgerEntries LedgerEntry[]
   portfolio     Portfolio[]
   sessions      TradingSession[]
@@ -31,15 +42,24 @@ model User {
   assigned      Ticket[]        @relation("TicketAssignee")
   messages      TicketMessage[]
   auditLogs     AuditLog[]
+  idempotencyKeys IdempotencyKey[]
+  custodySpends CustodySpend[]
 }
 
 model Wallet {
   id         String   @id @default(cuid())
   userId     String   @unique
   address    String
-  network    String   @default("simulated") // simulated | testnet | mainnet
-  kind       String   @default("SIMULATED") // SIMULATED | TESTNET | MAINNET
+  network    String   @default("mainnet") // mainnet | sandbox
+  kind       String   @default("MAINNET") // MAINNET | SANDBOX
   balanceCents Int    @default(0)
+  // Account hold: set when an admin puts the account under review for suspected abuse.
+  // A blocked account can still receive funds but cannot move them out (withdraw or
+  // trade). **A hold never moves or forfeits the balance** — the funds stay the user's
+  // until an admin resolves the hold, and the reason is recorded for the audit trail.
+  blocked      Boolean   @default(false)
+  blockedReason String?
+  blockedAt    DateTime?
   createdAt  DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -95,14 +115,18 @@ model TradeEvent {
 model Transaction {
   id          String   @id @default(cuid())
   userId      String
-  kind        String   // DEPOSIT | WITHDRAWAL | PAPER_TRADE | FEE
+  kind        String   // DEPOSIT | WITHDRAWAL | PAPER_TRADE | FEE | VENUE_ORDER
   amountCents Int
   status      String   @default("COMPLETED") // PENDING | COMPLETED | FAILED
   detail      String?
+  // Links a movement to the thing that caused it (e.g. a WithdrawalRequest id), so the
+  // refund/reconcile paths can find the row they must settle instead of guessing.
+  ref         String?
   createdAt   DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+  @@index([ref])
 }
 
 model Notification {
@@ -119,7 +143,7 @@ model Customer {
   id        String   @id @default(cuid())
   userId    String   @unique
   name      String
-  email     String
+  email     String? // optional: sign-in is wallet-based, so no email is collected
   tier      String   @default("standard")
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -174,4 +198,160 @@ model MarketCache {
   payload   String
   source    String
   fetchedAt DateTime @default(now())
+}
+
+// Single-use SIWE nonces: issued before a signature is requested, consumed on
+// verification. A nonce that is missing, expired or already used rejects the
+// sign-in, which is what stops a captured message from being replayed.
+model AuthNonce {
+  id        String    @id @default(cuid())
+  nonce     String    @unique
+  address   String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([expiresAt])
+}
+
+// Idempotency keys for the money paths (deposit / withdraw / trading). A key is
+// claimed inside the same transaction as the mutation it guards, so a retried
+// submit (double click, refresh, network replay) is a no-op instead of a second
+// movement. The unique constraint is the mechanism: claiming is a create that
+// fails on replay. See `src/lib/idempotency.ts` (PHASE18-006 groundwork).
+model IdempotencyKey {
+  id        String   @id @default(cuid())
+  userId    String
+  scope     String // deposit | withdraw | start_trading | stop_trading | webhook_deposit | coinbase_swap | custody_withdraw | owner_practice_funds | ... | venue_order
+  key       String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, scope, key])
+  @@index([createdAt])
+}
+
+// Persisted rolling custody spend ledger (PHASE18-004). Every real movement signed
+// through the custody boundary is recorded here, so the daily cap is derived from
+// what actually moved rather than from a caller-supplied total. `address` is the
+// custody signer's public address (never key material); `ref` is the on-chain tx
+// hash or idempotency key, for audit.
+model CustodySpend {
+  id          String   @id @default(cuid())
+  userId      String
+  address     String
+  amountCents Int
+  ref         String?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// A user's withdrawal **request** and the admin decision on it (`PHASE18-006`
+// addendum). Funds are reserved (debited from the spendable balance) when the request is
+// created, so a pending request cannot be spent twice and a decline can hand the exact
+// amount back. A `DECLINED` or `FAILED` request **always refunds the reservation** — a
+// decline means no funds move, and the money stays the user's; nothing in this model can
+// send a user's balance anywhere but back to the user or to the destination they named.
+// `rail` records which path settles it (see `src/lib/withdrawals.ts`).
+model WithdrawalRequest {
+  id          String    @id @default(cuid())
+  userId      String
+  amountCents Int // USD notional reserved from the balance (integer cents)
+  rail        String // CUSTODY_ONCHAIN | COINBASE_OFFRAMP
+  chainId     Int // the chain the request was made on (on-chain rail)
+  destination String? // verified destination address (on-chain rail)
+  nativeWei   String? // atomic amount to send, priced when the user requested it
+  status      String    @default("PENDING") // PENDING | APPROVED | DECLINED | FAILED
+  reason      String? // required on DECLINED and FAILED; shown to the user
+  // A declined request opens a **dispute window** measured in business days: the user is
+  // told when it closes and can argue the case in the support chat. The window expiring is
+  // not a decision — an admin resolves it, and closing it as MISUSE_CONFIRMED bans the
+  // account and freezes the balance (it never moves it; see src/lib/withdrawals.ts).
+  disputeOpensAt  DateTime?
+  disputeClosesAt DateTime?
+  disputeOutcome  String? // null while open; CLEARED | MISUSE_CONFIRMED
+  txHash      String?
+  decidedById String?
+  decidedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user      User  @relation("WithdrawalRequester", fields: [userId], references: [id], onDelete: Cascade)
+  decidedBy User? @relation("WithdrawalDecider", fields: [decidedById], references: [id])
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+}
+
+// Discrete signal events ingested from a provider (see `docs/signals/`). A signal is a
+// **read-only input**: it informs risk, it never moves funds. A row is identified by the
+// event's identity rather than by a vendor id (the vendors do not supply one), so
+// re-fetching the same window de-duplicates instead of inflating history. `raw` keeps the
+// provider item for audit and is never parsed on a hot path.
+model SignalEvent {
+  id           String   @id @default(cuid())
+  provider     String // altfins
+  providerKey  String // SIGNALS_SUMMARY_BULL_POWER
+  name         String
+  symbol       String // normalised to the instrument catalog
+  assetClass   String // crypto | forex | equity
+  direction    String // bullish | bearish | neutral
+  ts           DateTime // when the signal fired, not when it was fetched
+  priceUsd     Float?
+  marketCapUsd Float?
+  changePct    Float?
+  raw          String? // the raw provider item, as JSON, for audit
+  createdAt    DateTime @default(now())
+
+  @@unique([provider, providerKey, symbol, direction, ts])
+  @@index([ts])
+  @@index([symbol, ts])
+}
+
+// Verified Coinbase webhook deliveries (PHASE19-006). Every event is recorded once
+// and de-duplicated by `eventId`, so a replayed delivery cannot credit twice. When
+// an event warrants a ledger movement it runs in the same transaction as the status
+// update. `userId` stays null for events that match no app user (no credit is
+// applied) — see `src/lib/coinbase/ingest.ts`.
+model WebhookEvent {
+  id         String   @id @default(cuid())
+  provider   String   @default("coinbase")
+  eventId    String   @unique
+  eventType  String
+  status     String   @default("RECEIVED") // RECEIVED | PROCESSED | IGNORED | UNMATCHED
+  userId     String?
+  payload    String
+  receivedAt DateTime @default(now())
+
+  @@index([eventType, receivedAt])
+}
+
+// Admin-managed API keys for the third-party providers (see `src/lib/credentials/`).
+// This is the **key pool**: an operator can add several keys per provider so that when
+// one is rate-limited or exhausted the resolver rotates to the next. `secret` is the
+// JSON field map encrypted at rest with AES-256-GCM (`CREDENTIAL_ENCRYPTION_KEY`); the
+// plaintext key is never stored, returned, rendered or logged. `fingerprint` is a
+// non-reversible hash shown only so an operator can tell two keys apart. Failover state
+// lives on the row (`status`, `failureCount`, `cooldownUntil`), so an exhausted key is
+// skipped until its cooldown passes.
+model ProviderCredential {
+  id            String    @id @default(cuid())
+  provider      String // altfins | freecryptoapi | coinmarketcap | finnhub | wundertrading | coinbase-cdp
+  label         String // human label, e.g. "primary" or "backup-2"
+  secret        String // AES-256-GCM ciphertext of the field map (JSON) — never plaintext
+  fingerprint   String // sha256(secret-physical-bytes) prefix, for operator recognition only
+  priority      Int       @default(100) // lower is tried first
+  enabled       Boolean   @default(true)
+  status        String    @default("ACTIVE") // ACTIVE | COOLDOWN | INVALID | DISABLED
+  lastError     String?
+  successCount  Int       @default(0) // times this key was used successfully
+  failureCount  Int       @default(0)
+  cooldownUntil DateTime?
+  lastUsedAt    DateTime?
+  createdById   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([provider, enabled, priority])
 }

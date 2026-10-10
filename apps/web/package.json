@@ -10,10 +10,14 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:unit": "vitest run tests/domain.test.ts tests/market.test.ts",
+    "test:unit": "vitest run tests/market.test.ts tests/owner.test.ts",
     "test:integration": "vitest run tests/integration",
     "test:docs": "vitest run tests/docs.test.ts",
     "test:e2e": "playwright test",
+    "test:owner-gating": "playwright test tests/e2e/owner-gating.spec.ts",
+    "smoke:coinbase": "vitest run tests/coinbase.live.test.ts",
+    "check:coinbase-credentials": "tsx scripts/coinbase-credentials.ts",
+    "check:provider-keys": "tsx scripts/provider-keys.ts",
     "verify:deploy": "npm run build && npm test",
     "test:ui-audit": "playwright test tests/e2e/ui-audit.spec.ts",
     "db:deploy": "prisma migrate deploy",
@@ -23,14 +27,28 @@
     "db:reset": "prisma migrate reset --force && tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@coinbase/cdp-sdk": "^1.58.0",
+    "@gsap/react": "^2.1.2",
+    "@hugeicons/core-free-icons": "^4.3.5",
+    "@hugeicons/react": "^1.1.10",
     "@prisma/client": "^6.7.0",
+    "@rainbow-me/rainbowkit": "^2.2.11",
+    "@spruceid/siwe-parser": "^3.0.0",
+    "@tanstack/react-query": "^5.104.1",
+    "gsap": "^3.15.0",
+    "motion": "^14.0.0",
     "next": "16.4.0",
+    "ogl": "^1.0.11",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "viem": "^2.57.4",
+    "wagmi": "^2.19.5",
     "zod": "^4.4.3"
   },
   "overrides": {
-    "deepmerge-ts": "^8.0.2"
+    "deepmerge-ts": "^8.0.2",
+    "ws": "^8.20.1",
+    "decode-uri-component": "^0.5.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

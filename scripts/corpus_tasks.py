@@ -48,17 +48,35 @@ PHASE_TASKS = [
     ("PHASE15-013", "Phase 15", "CI Postgres stack job + smoke query", 4),
     ("PHASE16-001", "Phase 16", "Publish source to GitHub (veylora-fintech-ai-trading)", 2),
     ("PHASE16-002", "Phase 16", "Deploy to Vercel + live post-deploy verification", 2),
-    # Phase 18 — roadmap change: wallet login decides real (mainnet) vs simulated (testnet).
+    # Phase 18 — roadmap change: wallet login decides real (mainnet) vs practice (owner-only).
     ("PHASE18-001", "Phase 18", "Wallet connect + SIWE login (replace email/password)", 1),
-    ("PHASE18-002", "Phase 18", "Network classification: chainId -> TESTNET|MAINNET, bound to session", 1),
-    ("PHASE18-003", "Phase 18", "Server-side execution gate with explicit real vs simulated paths", 1),
-    ("PHASE18-004", "Phase 18", "Real custody model (KMS/HSM hot wallet or user-signed transfers)", 1),
-    ("PHASE18-005", "Phase 18", "Real execution venue integration (exchange/broker or on-chain swap)", 2),
+    ("PHASE18-002", "Phase 18", "Network classification: chainId -> MAINNET|SANDBOX, bound to session", 1),
+    ("PHASE18-003", "Phase 18", "Server-side execution gate for real money paths", 1),
+    ("PHASE18-004", "Phase 18", "Custodial hot-wallet custody (KMS/HSM keys, spend limits)", 1),
+    ("PHASE18-005", "Phase 18", "Real venues: on-chain transfers + exchange/broker trading", 2),
     ("PHASE18-006", "Phase 18", "Irreversibility UX: confirmations, spend caps, idempotency keys", 2),
     ("PHASE18-007", "Phase 18", "Compliance: KYC/AML, sanctions screening, jurisdiction gating", 2),
-    ("PHASE18-008", "Phase 18", "Replace simulated-only invariants with network-gating tests", 2),
+    ("PHASE18-008", "Phase 18", "Replace paper-only invariants with network-gating tests", 2),
     ("PHASE18-009", "Phase 18", "Rewrite user-facing copy + FAQ for the wallet-typed model", 3),
+    # Phase 19 — Coinbase integration. Add Coinbase login/deposit/trade/withdrawals
+    # *alongside* the existing SIWE wallet setup (keep, never replace). The
+    # reference is the split docs under `coinbase/` (see `coinbase/INTEGRATION.md`).
+    # Entries are (task_id, phase, title, priority, depends_on).
+    ("PHASE19-001", "Phase 19", "Coinbase knowledge base: split CDP docs into /coinbase", 2, ""),
+    ("PHASE19-002", "Phase 19", "Coinbase login: OAuth / Sign in with Coinbase alongside SIWE", 2, "PHASE18-001"),
+    ("PHASE19-003", "Phase 19", "Coinbase deposits: Onramp + Deposit Destinations + payment methods", 2, "PHASE19-001"),
+    ("PHASE19-004", "Phase 19", "Coinbase trading: real venue adapter (Advanced Trade/Trade API, swaps)", 2, "PHASE18-004,PHASE19-001"),
+    ("PHASE19-005", "Phase 19", "Coinbase withdrawals: Offramp + disbursements + transfer-out", 2, "PHASE18-004,PHASE19-001"),
+    ("PHASE19-006", "Phase 19", "Coinbase webhooks: verify + ingest transfer/payment events into ledger", 2, "PHASE19-003,PHASE19-005"),
+    ("PHASE19-007", "Phase 19", "Coinbase CDP credentials: sandbox->live, secret hygiene, key rotation", 1, "PHASE18-004"),
+    ("PHASE19-008", "Phase 19", "Coinbase sandbox + tests (unit/integration/e2e)", 3, "PHASE19-003,PHASE19-004,PHASE19-005"),
+    ("PHASE19-009", "Phase 19", "Coinbase UI surfaces (connect/onramp/withdraw/trade) on existing routes", 3, "PHASE19-002,PHASE19-003,PHASE19-005"),
+    ("PHASE19-010", "Phase 19", "Coinbase compliance: KYC/AML, sanctions, jurisdiction gating", 2, "PHASE18-007,PHASE19-003"),
 ]
+
+# Tasks that are already complete at seed time (kept idempotent: a re-seed never
+# clobbers a status someone has since advanced).
+PRE_DONE = {"PHASE19-001"}
 
 
 def seed(conn: sqlite3.Connection) -> dict:
@@ -82,11 +100,15 @@ def seed(conn: sqlite3.Connection) -> dict:
         )
         n_repo += 1
     n_phase = 0
-    for tid, phase, title, prio in PHASE_TASKS:
+    for task in PHASE_TASKS:
+        tid, phase, title, prio = task[:4]
+        depends = task[4] if len(task) > 4 else None
+        status = "VERIFIED" if tid in PRE_DONE else "PENDING"
         cur.execute(
-            "INSERT INTO tasks(task_id,phase,title,priority,status,req_os) VALUES(?,?,?,?, 'PENDING','linux') "
-            "ON CONFLICT(task_id) DO UPDATE SET title=excluded.title",
-            (tid, phase, title, prio),
+            "INSERT INTO tasks(task_id,phase,title,priority,status,req_os,depends_on) "
+            "VALUES(?,?,?,?,?,'linux',?) "
+            "ON CONFLICT(task_id) DO UPDATE SET title=excluded.title, depends_on=excluded.depends_on",
+            (tid, phase, title, prio, status, depends),
         )
         n_phase += 1
     conn.commit()

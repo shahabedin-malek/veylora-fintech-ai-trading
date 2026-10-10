@@ -31,6 +31,12 @@ next-env.d.ts
 .env.*.deploy
 **/.env
 **/.env.*.deploy
+.env.production*
+.env.*.production*
+# Key/cert material (Apple/Google service keys, TLS, etc.) — never commit.
+*.p8
+*.p12
+*.pem
 
 # Vercel CLI link state
 .vercel
@@ -50,6 +56,39 @@ vercel-token.txt
 tigerdata.txt
 .vercel
 .env.deploy
+
+# Provider chat/console exports that embed API keys (Alchemy, Reown/WalletConnect,
+# Etherscan). These are pasted by hand into the repo root, so match both the exact
+# names seen and the loose patterns, or the next one gets committed by accident.
+Alchemy.txt
+alchemy*.txt
+reown-info.txt
+reown*.txt
+Etherscan.txt
+tigerdata*.txt
+*apikey*.txt
+*api-key*.txt
+
+# Signals provider hand-off (AltFins, TAAPI.IO, Finnhub, CoinMarketCap, WunderTrading, …).
+# It carries live API keys, so it stays out of version control; the sanitised knowledge
+# base it produced lives in `docs/signals/`.
+signals/
+
+# Coinbase CDP API key downloads (id + secret) and wallet-secret files.
+cdp_api_key.json
+cdp_api_key*.json
+cdp*wallet*secret*.json
+cdp-wallet-secret*
+coinbase*credentials*
+# …but not the credential-audit *test*, whose name matches the pattern above by accident.
+!apps/web/tests/coinbase-credentials.test.ts
+# Coinbase CDP docs/console export. It carries live API keys and a webhook signing
+# secret in its header, so it stays out of version control; the sanitised, split
+# knowledge base it produces lives in `coinbase/` (regenerate with
+# `python3 scripts/coinbase_extract.py`).
+coinbase-api-and-docs.txt
+coinbase*docs*.txt
+coinbase*api*docs*
 
 # Local databases
 *.db

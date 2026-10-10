@@ -1,8 +1,9 @@
 import { test, expect, type Browser } from "@playwright/test";
-import { createHmac } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { PrismaClient } from "@prisma/client";
+import { createToken } from "../../src/lib/session-token";
+import { SEEDED_ACCOUNTS, SEEDED_CHAIN_ID } from "../../prisma/seed-accounts";
 
 /* ------------------------------------------------------------------ setup */
 
@@ -18,12 +19,6 @@ function readEnv(): Record<string, string> {
   return out;
 }
 
-function makeToken(userId: string, secret: string): string {
-  const expiry = Date.now() + 86_400_000;
-  const payload = `${userId}.${expiry}`;
-  return `${payload}.${createHmac("sha256", secret).update(payload).digest("base64url")}`;
-}
-
 type Role = "none" | "user" | "admin";
 
 interface RouteDef {
@@ -31,6 +26,13 @@ interface RouteDef {
   role: Role;
   expect404?: boolean;
   label?: string;
+  /**
+   * Defaults to `reduce`. Set `no-preference` to audit the *animated* branch of a
+   * page instead of its reduced-motion fallback — the two render different markup
+   * (e.g. the landing hero swaps `SplitText` for the WebGL `WarpText`), so auditing
+   * only one of them leaves the other unverified.
+   */
+  motion?: "reduce" | "no-preference";
 }
 
 const VIEWPORTS = [
@@ -189,10 +191,51 @@ function detectContrast() {
   return Array.from(map.values()).sort((a, b) => a.ratio - b.ratio).slice(0, 40);
 }
 
+/**
+ * Detects a live region nested inside another live region.
+ *
+ * Two nested live regions make a screen reader announce the same change twice, and
+ * nothing about the markup looks wrong until you check for it specifically — the
+ * `/trade` terminal shipped a `role="status"` chip inside its `role="log"` stream,
+ * so every terminal event was read out twice.
+ *
+ * `log`, `status`, `alert`, `timer` and `marquee` are implicitly live; `aria-live`
+ * (anything but `off`) is the explicit form.
+ */
+function detectNestedLiveRegions() {
+  const LIVE_ROLES = new Set(["log", "status", "alert", "timer", "marquee"]);
+
+  const isLive = (el: Element): boolean => {
+    const role = el.getAttribute("role") ?? "";
+    const live = el.getAttribute("aria-live");
+    return LIVE_ROLES.has(role) || (live !== null && live !== "off");
+  };
+
+  const selector = (el: Element): string => {
+    const tag = el.tagName.toLowerCase();
+    const cls = (el.getAttribute("class") || "").split(/\s+/).filter(Boolean).slice(0, 2).join(".");
+    return `${cls ? `${tag}.${cls}` : tag}[role=${el.getAttribute("role") ?? "-"}]`;
+  };
+
+  const nested: { inner: string; outer: string }[] = [];
+  for (const el of Array.from(document.querySelectorAll("body *"))) {
+    if (!isLive(el)) continue;
+    let cur: Element | null = el.parentElement;
+    while (cur) {
+      if (isLive(cur)) {
+        nested.push({ inner: selector(el), outer: selector(cur) });
+        break;
+      }
+      cur = cur.parentElement;
+    }
+  }
+  return nested;
+}
+
 /* ------------------------------------------------------------------ report */
 
 interface Finding {
-  kind: "overflow" | "contrast" | "console";
+  kind: "overflow" | "contrast" | "aria" | "console";
   viewport: string;
   route: string;
   detail: string;
@@ -202,25 +245,31 @@ const checked: { viewport: string; route: string; status: number }[] = [];
 
 /* --------------------------------------------------------------------- test */
 
-test("every page is free of horizontal overflow and contrast failures at 3 widths", async ({ browser }) => {
+test("every page is free of horizontal overflow, contrast failures and nested live regions at 3 widths", async ({ browser }) => {
   test.setTimeout(300_000);
 
   const env = readEnv();
   // The .env file is gitignored, so CI supplies the secret as an env var.
   const secret = process.env.SESSION_SECRET ?? env.SESSION_SECRET;
   expect(secret, "SESSION_SECRET must be set in apps/web/.env").toBeTruthy();
+  // Tokens are minted with the app's own signer, so the same secret must be used.
+  process.env.SESSION_SECRET = secret;
 
   const prisma = new PrismaClient();
-  const user = await prisma.user.findUnique({ where: { email: "trader@veylora.dev" } });
-  const admin = await prisma.user.findUnique({ where: { email: "admin@veylora.dev" } });
+  const user = await prisma.user.findUnique({
+    where: { walletAddress: SEEDED_ACCOUNTS.trader.address },
+  });
+  const admin = await prisma.user.findUnique({
+    where: { walletAddress: SEEDED_ACCOUNTS.admin.address },
+  });
   const ticket = await prisma.ticket.findFirst();
   await prisma.$disconnect();
   expect(user && admin, "seeded sample + admin users are required").toBeTruthy();
 
   const tokens: Record<Role, string> = {
     none: "",
-    user: makeToken(user!.id, secret),
-    admin: makeToken(admin!.id, secret),
+    user: createToken(user!.id, SEEDED_CHAIN_ID),
+    admin: createToken(admin!.id, SEEDED_CHAIN_ID),
   };
 
   const routes: RouteDef[] = [
@@ -234,9 +283,17 @@ test("every page is free of horizontal overflow and contrast failures at 3 width
     { path: "/history", role: "user" },
     { path: "/support", role: "user" },
     { path: "/admin", role: "admin" },
+    { path: "/admin/webhooks", role: "admin" },
     ...(ticket ? [{ path: `/admin/tickets/${ticket.id}`, role: "admin" as Role }] : []),
     { path: "/markets?symbol=BTC&range=60&view=candles", role: "none", label: "/markets (candles)" },
+    { path: "/markets?news=crypto", role: "none", label: "/markets (news filtered)" },
     { path: "/does-not-exist", role: "none", expect404: true },
+    // The same routes with motion enabled: exercises the animated surfaces
+    // (Phase 1–4 components) rather than the reduced-motion fallbacks. `/dashboard`
+    // is signed in, so it also renders the longest nav (and the pill group at
+    // desktop width) instead of the two-link signed-out bar.
+    { path: "/", role: "none", label: "/ (motion)", motion: "no-preference" },
+    { path: "/dashboard", role: "user", label: "/dashboard (motion)", motion: "no-preference" },
   ];
 
   const outDir = join(process.cwd(), "reports");
@@ -249,7 +306,7 @@ test("every page is free of horizontal overflow and contrast failures at 3 width
       const context = await browser.newContext({
         viewport: { width: vp.width, height: vp.height },
         deviceScaleFactor: 1,
-        reducedMotion: "reduce",
+        reducedMotion: route.motion ?? "reduce",
       });
       if (route.role !== "none") {
         await context.addCookies([
@@ -309,6 +366,16 @@ test("every page is free of horizontal overflow and contrast failures at 3 width
         });
       }
 
+      const liveRegions = await page.evaluate(detectNestedLiveRegions);
+      for (const r of liveRegions) {
+        findings.push({
+          kind: "aria",
+          viewport: vp.name,
+          route: label,
+          detail: `live region ${r.inner} is nested inside ${r.outer} — both announce, so the same change is read twice`,
+        });
+      }
+
       for (const e of Array.from(new Set(consoleErrors))) {
         // The 404 route legitimately requests a missing document; a missing
         // favicon must never be a finding either.
@@ -326,12 +393,13 @@ test("every page is free of horizontal overflow and contrast failures at 3 width
   /* ------------------------------------------------------------- artifacts */
   const byKind = (k: Finding["kind"]) => findings.filter((f) => f.kind === k);
   const lines: string[] = [];
-  lines.push("# UI audit — overflow & contrast");
+  lines.push("# UI audit — overflow, contrast & live regions");
   lines.push("");
   lines.push(`- viewports: ${VIEWPORTS.map((v) => `${v.name} ${v.width}x${v.height}`).join(", ")}`);
   lines.push(`- pages checked: ${checked.length} (${routes.length} routes × ${VIEWPORTS.length} widths)`);
   lines.push(`- overflow findings: ${byKind("overflow").length}`);
   lines.push(`- contrast findings: ${byKind("contrast").length}`);
+  lines.push(`- aria findings: ${byKind("aria").length}`);
   lines.push(`- console findings: ${byKind("console").length}`);
   lines.push("");
   lines.push("## Pages checked");
@@ -340,7 +408,7 @@ test("every page is free of horizontal overflow and contrast failures at 3 width
   lines.push("| --- | --- | --- |");
   for (const c of checked) lines.push(`| ${c.viewport} | \`${c.route}\` | ${c.status} |`);
   lines.push("");
-  for (const kind of ["overflow", "contrast", "console"] as const) {
+  for (const kind of ["overflow", "contrast", "aria", "console"] as const) {
     const items = byKind(kind);
     lines.push(`## ${kind} findings (${items.length})`);
     lines.push("");
@@ -360,6 +428,7 @@ test("every page is free of horizontal overflow and contrast failures at 3 width
   const summary = [
     `overflow=${byKind("overflow").length}`,
     `contrast=${byKind("contrast").length}`,
+    `aria=${byKind("aria").length}`,
     `console=${byKind("console").length}`,
   ].join(" ");
   expect(findings, `UI audit findings (${summary}) — see reports/ui-audit.md:\n` +

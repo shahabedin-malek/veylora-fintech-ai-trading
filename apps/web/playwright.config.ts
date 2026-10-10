@@ -30,5 +30,12 @@ export default defineConfig({
         timeout: 120_000,
         stdout: "ignore",
         stderr: "pipe",
+        // The owner suite needs a configured owner; the default is the public owner
+        // wallet, so the practice-network and practice-funds paths are reachable in CI.
+        env: {
+          OWNER_WALLET_ADDRESSES:
+            process.env.OWNER_WALLET_ADDRESSES ??
+            "0x5a407Ff50d55142c36144B390972c51A768eBf8c",
+        },
       },
 });

@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { SimulatedProvider } from "@/lib/market/simulated";
+import { OfflineProvider } from "@/lib/market/offline";
 import { CATALOG, instrument } from "@/lib/market/catalog";
 import { isChartView } from "@/components/PriceChart";
 
-describe("simulated market provider", () => {
-  const provider = new SimulatedProvider();
+describe("offline market provider", () => {
+  const provider = new OfflineProvider();
 
-  it("quotes are always labelled simulated", async () => {
+  it("quotes are always labelled offline", async () => {
     const quotes = await provider.getQuotes(["BTC", "EURUSD", "AAPL"]);
     expect(quotes).toHaveLength(3);
-    expect(quotes.every((q) => q.simulated === true)).toBe(true);
-    expect(quotes.every((q) => q.source === "simulated")).toBe(true);
+    expect(quotes.every((q) => q.offline === true)).toBe(true);
+    expect(quotes.every((q) => q.source === "offline")).toBe(true);
   });
 
   it("quotes are deterministic within the same minute bucket", async () => {
@@ -24,11 +24,11 @@ describe("simulated market provider", () => {
     expect(quotes).toHaveLength(0);
   });
 
-  it("candles honour OHLC invariants and are flagged simulated", async () => {
+  it("candles honour OHLC invariants and are flagged as generated", async () => {
     const candles = await provider.getCandles("ETH", 24);
     expect(candles).toHaveLength(24);
     for (const c of candles) {
-      expect(c.simulated).toBe(true);
+      expect(c.offline).toBe(true);
       expect(c.h).toBeGreaterThanOrEqual(Math.max(c.o, c.c));
       expect(c.l).toBeLessThanOrEqual(Math.min(c.o, c.c));
       expect(c.v).toBeGreaterThan(0);

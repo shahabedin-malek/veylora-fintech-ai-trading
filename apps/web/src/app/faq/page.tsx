@@ -1,23 +1,27 @@
 const FAQS = [
   {
     q: "Is this real trading?",
-    a: "No. Everything on the trading desk is simulated paper trading. No real funds are ever moved, and no result shown is a real investment return.",
+    a: "Yes. You sign in with a wallet and the desk runs real, custody-signed Coinbase swaps: those move real funds on-chain and are final. Real execution is on by default, and a deployment without configured custody refuses every money action rather than pretending.",
+  },
+  {
+    q: "Which wallet should I connect?",
+    a: "Any wallet on Ethereum, Base or Arbitrum signs you in — there is no password and no email. Your wallet address is your account, and it is only trusted after you sign a one-time message that costs no gas and moves no funds.",
   },
   {
     q: "Where does the market data come from?",
-    a: "Crypto prices come from the public CoinGecko API where reachable. Forex and equities use clearly-labelled deterministic simulated values. Every quote shows its source badge and timestamp.",
+    a: "Crypto prices come from the public CoinGecko API where reachable. Forex and equities use clearly-labelled deterministic fallback values. Every quote shows its source badge and timestamp.",
   },
   {
-    q: "Why do I need a minimum balance to start?",
-    a: "The simulated desk requires at least $20 (configurable) before it will start, so the flow mirrors a real desk. The UI always tells you exactly how much more is required.",
+    q: "How do deposits work?",
+    a: "Buy crypto with a card or bank through Coinbase — it is delivered to your own wallet — or receive an on-chain transfer. Your balance here is credited only after a verified Coinbase webhook reconciles the movement; an event that matches no account credits nothing.",
   },
   {
-    q: "What happens if I stop trading too soon?",
-    a: "If you stop within 5 minutes you get a warning, because short sessions are usually accidental. You can confirm with Force Stop.",
+    q: "How do withdrawals work?",
+    a: "Cash out to your bank through Coinbase's One-Click-Sell flow, or send crypto on-chain from the platform custody account. A withdrawal is signed at the custody boundary, spend limits are enforced before anything is signed, and it is final — it cannot be undone.",
   },
   {
-    q: "How is the withdrawal amount calculated?",
-    a: "Initial balance + simulated P/L − simulated platform fee = withdrawal total. The breakdown is shown before you confirm and the fee is explicitly labelled simulated.",
+    q: "What protects my funds?",
+    a: "Custody keys never live in this app: the platform holds only a key reference and API credentials, and signing happens inside the custody provider. Every real movement passes spend limits, an explicit server-side confirmation and a compliance boundary before it is sent.",
   },
   {
     q: "How does support work?",

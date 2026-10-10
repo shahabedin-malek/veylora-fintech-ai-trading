@@ -23,7 +23,11 @@ export default async function AdminTicketPage({ params }: { params: Promise<{ id
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 24 }}>{ticket.subject}</h1>
-          <p className="muted" style={{ margin: "6px 0 0" }}>{ticket.number} · {ticket.owner.name} ({ticket.owner.email}) · created {ticket.createdAt.toLocaleString()}</p>
+          {/* Wallet addresses are long unbreakable tokens, so this line wraps mid-word. */}
+          <p className="muted" style={{ margin: "6px 0 0", overflowWrap: "anywhere" }}>
+            {ticket.number} · {ticket.owner.name} (<span className="mono">{ticket.owner.walletAddress}</span>) · created{" "}
+            {ticket.createdAt.toLocaleString()}
+          </p>
         </div>
         <Link className="btn ghost" href="/admin">Back to console</Link>
       </div>
@@ -35,7 +39,7 @@ export default async function AdminTicketPage({ params }: { params: Promise<{ id
             {ticket.messages.map((m) => (
               <div key={m.id} className="card" style={{ padding: 12, borderColor: m.internal ? "var(--warn)" : undefined }}>
                 <div className="muted" style={{ fontSize: 12 }}>
-                  {m.author.name} · {m.createdAt.toLocaleString()} {m.internal && <span className="badge sim" style={{ marginLeft: 6 }}>internal note</span>}
+                  {m.author.name} · {m.createdAt.toLocaleString()} {m.internal && <span className="badge warn" style={{ marginLeft: 6 }}>internal note</span>}
                 </div>
                 <div style={{ marginTop: 4 }}>{m.body}</div>
               </div>

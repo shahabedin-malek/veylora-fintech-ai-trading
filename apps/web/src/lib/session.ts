@@ -1,56 +1,62 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
-import { getSessionSecret } from "@/lib/secret";
+import { networkClassForChainId, type NetworkClass } from "@/lib/network";
+import {
+  MAX_AGE_SECONDS,
+  SESSION_COOKIE,
+  createToken,
+  verifyToken,
+  type SessionPayload,
+} from "@/lib/session-token";
 
-const COOKIE = "fin_session";
-const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+export { MAX_AGE_SECONDS, SESSION_COOKIE, createToken, verifyToken };
+export type { SessionPayload };
 
-// Throws in production when SESSION_SECRET is missing or too weak.
-const secret = (): string => getSessionSecret();
-
-function sign(value: string): string {
-  return createHmac("sha256", secret()).update(value).digest("base64url");
-}
-
-/** Create a signed session token `userId.expiry.signature`. */
-export function createToken(userId: string, nowMs = Date.now()): string {
-  const expiry = nowMs + MAX_AGE * 1000;
-  const payload = `${userId}.${expiry}`;
-  return `${payload}.${sign(payload)}`;
-}
-
-export function verifyToken(token: string | undefined, nowMs = Date.now()): string | null {
-  if (!token) return null;
-  const parts = token.split(".");
-  if (parts.length !== 3) return null;
-  const [userId, expiry, sig] = parts;
-  const expected = sign(`${userId}.${expiry}`);
-  const a = Buffer.from(sig);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
-  if (Number(expiry) < nowMs) return null;
-  return userId;
-}
-
-export async function setSessionCookie(userId: string): Promise<void> {
+/** Writes the signed session cookie for a wallet-authenticated user. */
+export async function setSessionCookie(userId: string, chainId: number): Promise<void> {
   const store = await cookies();
-  store.set(COOKIE, createToken(userId), {
+  store.set(SESSION_COOKIE, createToken(userId, chainId), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: MAX_AGE,
+    maxAge: MAX_AGE_SECONDS,
   });
 }
 
 export async function clearSessionCookie(): Promise<void> {
   const store = await cookies();
-  store.delete(COOKIE);
+  store.delete(SESSION_COOKIE);
+}
+
+/** The signed-in session, including the chain the wallet authenticated on. */
+export async function getSession(): Promise<SessionPayload | null> {
+  const store = await cookies();
+  return verifyToken(store.get(SESSION_COOKIE)?.value);
+}
+
+export interface SessionMode extends SessionPayload {
+  /** Execution class derived from the session's chain — never from the client. */
+  network: NetworkClass;
+}
+
+/**
+ * The session **and** its execution class.
+ *
+ * The class is derived from the signed `chainId` on every read rather than stored
+ * alongside it, so it cannot drift from the signed value. A chain that is no longer
+ * supported fails closed — the caller sees "signed out" rather than an ambiguous
+ * session.
+ */
+export async function getSessionMode(): Promise<SessionMode | null> {
+  const session = await getSession();
+  if (!session) return null;
+
+  const network = networkClassForChainId(session.chainId);
+  if (!network) return null;
+
+  return { ...session, network };
 }
 
 export async function getCurrentUserId(): Promise<string | null> {
-  const store = await cookies();
-  return verifyToken(store.get(COOKIE)?.value);
+  return (await getSession())?.userId ?? null;
 }
-
-export const SESSION_COOKIE = COOKIE;

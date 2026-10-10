@@ -120,7 +120,7 @@
 - [ ] 0703 User journey defined
 - [ ] 0704 Admin journey defined
 - [ ] 0705 Trading  state machine defined
-- [ ] 0706 Wallet simulation architecture
+- [ ] 0706 Wallet architecture
 - [ ] 0707 Market data architecture
 - [ ] 0708 News architecture
 - [ ] 0709 Chart architecture
@@ -186,7 +186,7 @@
 - [ ] 1110 /deposit
 - [ ] 1111 Minimum-balance rule
 - [ ] 1112 Start trading
-- [ ] 1113 Simulated trading terminal
+- [ ] 1113 Trading terminal
 - [ ] 1114 Animated  balance
 - [ ] 1115 Stop trading
 - [ ] 1116 Force-stop warning
@@ -234,7 +234,7 @@
 - [ ] 1403 DB tests
 - [ ] 1404 Auth tests
 - [ ] 1405 Trading state tests
-- [ ] 1406 Wallet simulation tests
+- [ ] 1406 Wallet tests
 - [ ] 1407 Market-data tests
 - [ ] 1408 CRM/ticket tests
 - [ ] 1409 Background worker tests
@@ -284,7 +284,7 @@
 - [ ] 1709 Stop Trade works
 - [ ] 1710 Force Stop works
 - [ ] 1711 Withdrawal calculation is clear
-- [ ] 1712 Withdrawal simulation works
+- [ ] 1712 Withdrawal works
 - [ ] 1713 User can open support ticket
 - [ ] 1714 Admin can see ticket
 - [ ] 1715 Admin can reply

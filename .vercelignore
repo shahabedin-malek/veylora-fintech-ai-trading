@@ -1,0 +1,48 @@
+# Deploy scope for Vercel (the project's Root Directory is `apps/web`, so the CLI
+# uploads from the repository root). Keep the upload to source only — the corpus
+# and its extractions are tens of gigabytes and are not part of the product.
+
+# Corpus / research data (git-ignored, and huge)
+data/
+old/
+repo/
+logs/
+
+# Build output and test artifacts
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+reports/
+test-results/
+
+# Local databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+
+# Secrets and credential hand-off files — NEVER upload these to a build.
+# (A CLI deploy uploads the working tree, so this is a safety net independent of
+# .gitignore: a provider credentials file must not reach Vercel's build context.)
+.env
+.env.*
+!.env.example
+*.txt
+*.pem
+*.key
+*.p8
+
+# Research exports / knowledge base: not needed to build the app.
+# Anchor to the repository root — an unanchored `coinbase/` would also exclude the
+# app's own src/lib/coinbase/ and break the build.
+/coinbase/
+/reown*.txt
+/tigerdata*.txt
+/Alchemy.txt
+
+# Docs/progress are not needed to build the app
+/.progress/
+/docs/

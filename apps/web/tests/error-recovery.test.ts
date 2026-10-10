@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
  * Error-recovery tests.
  *
  * The product must survive a failing external dependency: market data falls back
- * to clearly-labelled simulated values, news degrades to an empty feed instead of
+ * to clearly-labelled offline values, news degrades to an empty feed instead of
  * throwing, and bad/expired sessions are rejected rather than trusted.
  */
 
@@ -50,16 +50,16 @@ function stubFetch(impl: (url: string) => Promise<unknown>) {
 /* ---------------------------------------------------- market data resilience */
 
 describe("market data resilience", () => {
-  it("falls back to laballed simulated quotes when the live provider fails", async () => {
+  it("falls back to labelled offline quotes when the live provider fails", async () => {
     stubFetch(() => Promise.reject(new Error("network down")));
 
     const { quotes, degraded, source } = await getQuotesSafe(["BTC", "ETH", "SOL"]);
 
     expect(quotes).toHaveLength(3);
-    expect(quotes.every((q) => q.simulated === true)).toBe(true);
-    expect(quotes.every((q) => q.source === "simulated")).toBe(true);
+    expect(quotes.every((q) => q.offline === true)).toBe(true);
+    expect(quotes.every((q) => q.source === "offline")).toBe(true);
     expect(degraded).toBe(true);
-    expect(source).toBe("simulated");
+    expect(source).toBe("offline");
   });
 
   it("falls back when the live provider returns a bad status", async () => {
@@ -68,30 +68,30 @@ describe("market data resilience", () => {
     const { quotes, degraded } = await getQuotesSafe(["BTC"]);
 
     expect(quotes).toHaveLength(1);
-    expect(quotes[0].simulated).toBe(true);
+    expect(quotes[0].offline).toBe(true);
     expect(degraded).toBe(true);
   });
 
-  it("labels non-crypto instruments as simulated even on the live provider path", async () => {
+  it("labels non-crypto instruments as offline even on the live provider path", async () => {
     // No fetch should be needed for forex-only requests.
     stubFetch(() => Promise.reject(new Error("should not be called for forex")));
 
     const { quotes, degraded } = await getQuotesSafe(["EURUSD", "AAPL"]);
 
     expect(quotes).toHaveLength(2);
-    expect(quotes.every((q) => q.simulated === true)).toBe(true);
+    expect(quotes.every((q) => q.offline === true)).toBe(true);
     expect(degraded).toBe(true);
   });
 
-  it("falls back to simulated candles and flags them", async () => {
+  it("falls back to offline candles and flags them", async () => {
     stubFetch(() => Promise.reject(new Error("network down")));
 
-    const { candles, simulated } = await getCandlesSafe("BTC", 24);
+    const { candles, offline } = await getCandlesSafe("BTC", 24);
 
     expect(candles).toHaveLength(24);
-    expect(simulated).toBe(true);
+    expect(offline).toBe(true);
     for (const c of candles) {
-      expect(c.simulated).toBe(true);
+      expect(c.offline).toBe(true);
       expect(c.h).toBeGreaterThanOrEqual(Math.max(c.o, c.c));
       expect(c.l).toBeLessThanOrEqual(Math.min(c.o, c.c));
     }
@@ -118,7 +118,7 @@ describe("news parsing", () => {
 
     const items = await getNews(["BTC"]);
 
-    // Three configured feeds each return the same two items -> deduped to two.
+    // Every configured feed returns the same two items -> deduped to two.
     expect(items).toHaveLength(2);
     expect(items.map((i) => i.url).sort()).toEqual([
       "https://example.com/btc?utm_source=rss",
@@ -127,7 +127,7 @@ describe("news parsing", () => {
 
     const hosts = config.newsFeeds.map((f) => new URL(f).hostname);
     expect(hosts).toContain(items[0].source);
-    expect(items.every((i) => i.simulated === false)).toBe(true);
+    expect(items.every((i) => i.offline === false)).toBe(true);
 
     // Instrument-relevant story sorts first when symbols are supplied.
     const btc = items[0];
@@ -149,7 +149,7 @@ describe("news parsing", () => {
 describe("session recovery", () => {
   it("rejects an expired session token", () => {
     const eightDaysAgo = Date.now() - 8 * 24 * 60 * 60 * 1000;
-    const expired = createToken("user-1", eightDaysAgo);
+    const expired = createToken("user-1", 11155111, eightDaysAgo);
 
     expect(verifyToken(expired)).toBeNull();
   });
@@ -161,11 +161,11 @@ describe("session recovery", () => {
   });
 
   it("rejects a token signed with a different secret", () => {
-    const forged = "user-1." + (Date.now() + 60_000) + ".not-a-valid-signature";
+    const forged = "user-1.11155111." + (Date.now() + 60_000) + ".not-a-valid-signature";
     expect(verifyToken(forged)).toBeNull();
   });
 
-  it("accepts a freshly issued token", () => {
-    expect(verifyToken(createToken("user-42"))).toBe("user-42");
+  it("accepts a freshly issued token and carries the signed-in chain", () => {
+    expect(verifyToken(createToken("user-42", 8453))).toEqual({ userId: "user-42", chainId: 8453 });
   });
 });

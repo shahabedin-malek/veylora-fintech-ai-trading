@@ -6,7 +6,7 @@ Build a polished, portfolio-ready ** fintech + CRM platform** using the existing
 
 `/home/chris/trading-ai/`
 
-The product vision is an AI-assisted financial dashboard covering crypto, forex, global equities, market signals, charts, news, research, a simulated trading experience, wallet flows, customer CRM/support, admin operations, and a modern responsive UI.
+The product vision is an AI-assisted financial dashboard covering crypto, forex, global equities, market signals, charts, news, research, a trading experience, wallet flows, customer CRM/support, admin operations, and a modern responsive UI.
 
 This is an existing codebase/corpus. Do not rebuild blindly. First inspect what exists, recover useful work, establish a durable plan/checkpoint system, then process the source corpus efficiently and move into implementation.
 
@@ -413,7 +413,7 @@ The  should include, where supported by the existing codebase:
 - balances
 - deposit flow using funds
 - trading dashboard
-- simulated AI trading terminal
+- AI trading terminal
 - start/stop trading controls
 - withdrawal of funds
 - transaction/history view
@@ -481,11 +481,11 @@ show clear message indicating how much more value is required.
 If Stop Trade is selected before 5 minutes:
 show a clear warning and provide Force Stop.
 
-Do Present simulated gains as real guaranteed investment returns.
+Do not present gains as real guaranteed investment returns.
 
-## 16. Simulated AI trading terminal
+## 16. AI trading terminal
 
-Create an attractive terminal/activity stream containing clearly labeled simulated events such as:
+Create an attractive terminal/activity stream containing clearly labeled events such as:
 
 Looking for opportunities...
 Scanning supported markets...
@@ -493,7 +493,7 @@ Pairs found...
 Analyzing market conditions...
 Checking liquidity...
 Checking configured market-data sources...
-Evaluating simulated strategy...
+Evaluating strategy...
 Paper trade opened...
 Paper trade updated...
 
@@ -511,8 +511,7 @@ WITHDRAW  FUNDS
 Prioritize:
 
 - mainnet wallet
-- testnet wallet
-- simulated wallet
+- practice wallet (owner-only)
 - sandbox APIs
 
 Support wallet adapters through an abstraction layer.
@@ -531,11 +530,11 @@ transaction status
 For  withdrawals, display a transparent calculation such as:
 
 Initial balance
-+ simulated  P/L
++ P/L
 -  platform fee if configured
 =  withdrawal total
 
-Clearly indicate that any  platform fee is simulated.
+Clearly indicate any platform fee.
 
 ## 18. Market data
 
@@ -827,7 +826,7 @@ Required categories:
 - UI
 - API
 - auth
-- wallet simulation
+- wallet flows
 - trading state machine
 - CRM/tickets
 - market-data adapters

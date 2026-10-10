@@ -140,6 +140,24 @@ describe("apps/web/README.md routes match the app router", () => {
   });
 });
 
+/* -------------------------------------------------------- test-file count */
+
+/**
+ * The app README cites the suite size by hand, so it drifts silently. The exact
+ * *test* count cannot be recomputed statically (loops and `.each` make it
+ * unreliable), but the number of test **files** is deterministic — guard that so a
+ * stale "n files" claim fails `npm test`.
+ */
+describe("apps/web/README.md test-file count stays honest", () => {
+  const testFiles = walk(join(APP, "tests")).filter((f) => f.endsWith(".test.ts"));
+
+  it("cites the real number of test files", () => {
+    const match = /npm test\s+#[^\n]*?(\d+) files/.exec(appReadme);
+    expect(match, "README must cite the test-file count as '<n> files' near 'npm test'").not.toBeNull();
+    expect(Number(match![1]), "test files cited vs on disk").toBe(testFiles.length);
+  });
+});
+
 /* ----------------------------------------------------------------- scripts */
 
 describe("documented scripts exist", () => {

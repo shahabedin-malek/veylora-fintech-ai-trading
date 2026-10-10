@@ -4,14 +4,16 @@ An AI-assisted financial dashboard covering crypto, forex and global equities,
 with charts, market data, a trading desk, wallet deposit/withdrawal flows, and a
 built-in CRM/support layer with an admin console.
 
-> **The login wallet picks the mode.** Sign-in is by wallet: a **testnet** wallet
-> runs fully **simulated** paper flows, a **mainnet** wallet is intended to run
-> **real** ones. Mainnet execution is **not implemented yet** (Phase 18 — see
-> `docs/NETWORK_BOUNDARY.md`), so today every wallet is `kind: "SIMULATED"` and no
-> real funds can move. No result shown is a real or guaranteed investment return.
+> **Sign-in is by wallet, and the desk is real.** Ethereum, Base and Arbitrum run
+> real, custody-signed execution — real funds move once custody is configured, and
+> `MAINNET_EXECUTION_ENABLED=0` is a kill switch. Three practice chains (Sepolia,
+> Base Sepolia, Arbitrum Sepolia) exist but are **owner-only** (`OWNER_WALLET_ADDRESSES`):
+> they are refused for every other wallet at sign-in, so ordinary users never see a
+> practice session. Practice funds — a labelled ledger credit with no real backing —
+> are likewise owner-only. No result shown is a real or guaranteed investment return.
 >
 > **Published.** Source: <https://github.com/shahabedin-malek/veylora-fintech-ai-trading>
-> (public, CI green on `main`). Live: <https://veylora-fintech-ai-trading-black.vercel.app>
+> (public, CI green on `main`). Live: <https://veylora-fintech-ai-trading.vercel.app>
 > (Next.js on Vercel + managed Postgres). Note that the shorter
 > `veylora-fintech-ai-trading.vercel.app` belongs to a separate, misconfigured
 > deployment of this app and does not work — see `.progress/DECISIONS.md` (D24).
@@ -23,8 +25,10 @@ apps/web/            The product (Next.js 16 + React 19 + Prisma + Tailwind 4)
 .github/workflows/   CI: verify:deploy gate, Playwright e2e, Docker image build
 scripts/             Corpus pipeline (inventory, extraction, analysis, progress)
 docs/                Audit, plan, architecture, data model, requirements, branding,
-                     release checklist, simulation boundary, dependency audit,
-                     deployment notes
+                     release checklist, network boundary, dependency audit,
+                     deployment notes, open tasks & ideas, Coinbase Onramp readiness
+coinbase/            Split Coinbase CDP docs knowledge base (163 pages) + the
+                     app-integration map; regenerate with scripts/coinbase_extract.py
 .progress/           Durable checkpoint / task-state control plane (Markdown)
 data/                Corpus database, manifests, scraped knowledge (git-ignored)
 old/                 Historical projects (corpus source, git-ignored)
@@ -42,7 +46,9 @@ npm run db:deploy && npm run db:seed
 npm run dev                 # http://localhost:3000
 ```
 
-Accounts: `trader@veylora.dev / password123` (user), `admin@veylora.dev / admin12345` (admin).
+Sign-in is by wallet (SIWE) — there is no password. Seeded sample accounts are the
+wallet addresses `0x1111111111111111111111111111111111111111` (user) and
+`0x2222222222222222222222222222222222222222` (admin).
 See `apps/web/README.md` for routes and scripts.
 
 ## Corpus pipeline

@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { MIN_SECRET_LENGTH, getSessionSecret, isUsingInsecureFallback } from "@/lib/secret";
+import { REAL_EXECUTOR_IMPLEMENTED, executionGate } from "@/lib/execution";
 
 /**
  * Deployment / build verification.
@@ -95,10 +96,21 @@ describe("repository hygiene", () => {
     expect(script).toMatch(/postgresql/);
   });
 
-  it("defaults to the simulated wallet and never enables mainnet", () => {
-    const source = readFileSync(join(ROOT, "src/lib/actions.ts"), "utf8");
-    expect(source).toMatch(/kind:\s*"SIMULATED"/);
-    expect(source).not.toMatch(/MAINNET/);
+  it("provisions real wallets and keeps the real executor behind the gate", () => {
+    // Wallets are provisioned as real mainnet accounts.
+    const source = readFileSync(join(ROOT, "src/lib/auth.ts"), "utf8");
+    expect(source).toMatch(/kind:\s*"MAINNET"/);
+
+    // A real executor exists (the Coinbase swap venue adapter). Real execution is
+    // on by default, but still needs custody, which this test process does not
+    // configure, so it is refused rather than signing anything.
+    expect(REAL_EXECUTOR_IMPLEMENTED).toBe(true);
+    vi.stubEnv("CUSTODY_PROVIDER", "");
+    vi.stubEnv("CUSTODY_KEY_ID", "");
+    expect(executionGate("MAINNET").allowed).toBe(false);
+    // And the kill switch refuses it outright, without a code change.
+    vi.stubEnv("MAINNET_EXECUTION_ENABLED", "0");
+    expect(executionGate("MAINNET").allowed).toBe(false);
   });
 
   it("ships a container build with secrets excluded from the context", () => {

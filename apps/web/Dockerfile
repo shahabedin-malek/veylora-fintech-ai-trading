@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 #
-# Production image for Veylora Fintech AI Trading (simulated).
+# Production image for Veylora Fintech AI Trading (custody-signed execution, wallet sign-in).
 #
 #   build:  docker build -t veylora-web ./apps/web
 #   run:    docker run --rm -p 3000:3000 \
@@ -38,6 +38,10 @@ FROM base AS builder
 ENV DATABASE_URL="file:./build.db"
 # Emit the self-contained .next/standalone server bundle consumed by the runner.
 ENV NEXT_OUTPUT=standalone
+# Optional, build-time, PUBLIC (not a secret): the WalletConnect/Reown project id.
+# Empty ⇒ the WalletConnect QR connector is not offered; injected wallets work.
+ARG NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=""
+ENV NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=$NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
 # Datasource provider for the generated client. Keep the single schema.prisma as
 # the source of truth and switch it here for Postgres deploys.
 #   docker build --build-arg DB_PROVIDER=postgresql .

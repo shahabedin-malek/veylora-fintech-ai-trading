@@ -53,13 +53,20 @@ test("fresh session walkthrough: public content, protected redirects, no secret 
   /* 2. Markets renders its real surfaces (chart, table, news). */
   await page.goto("/markets", { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: "All instruments" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Latest news" })).toBeVisible();
+  // Exact: the sidebar also has a heading ("Live market news") that contains "News".
+  await expect(page.getByRole("heading", { name: "News", exact: true })).toBeVisible();
   expect(await page.locator("svg").count(), "a chart should be drawn").toBeGreaterThan(0);
-  // Every instrument is labelled with its source or a simulated badge.
+  // Every instrument is labelled with its source badge.
   expect(
     await page.locator(".badge").count(),
     "instrument/news source labels should be present"
   ).toBeGreaterThan(0);
+  // The feed is browsable by asset class, and the filter is a plain link — it works
+  // without JS and the URL stays the source of truth.
+  await expect(page.getByRole("group", { name: /Filter news by asset class/i })).toBeVisible();
+  await page.getByRole("link", { name: /^Crypto/ }).first().click();
+  await expect(page).toHaveURL(/news=crypto/);
+  await expect(page.getByRole("heading", { name: "News", exact: true })).toBeVisible();
 
   /* 3. No secret leakage into any rendered page. */
   for (const path of PUBLIC) {
@@ -75,9 +82,9 @@ test("fresh session walkthrough: public content, protected redirects, no secret 
     expect(res?.status() ?? 0, `${path} must not 5xx`).toBeLessThan(500);
     await expect(page, `${path} should redirect to /login`).toHaveURL(/\/login/);
     // It must land on the sign-in page, not on the protected page itself.
-    await expect(page.getByRole("heading", { name: "Sign in", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /sign in with your wallet/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /CRM console/ })).toHaveCount(0);
-    await expect(page.getByText("Simulated balance")).toHaveCount(0);
+    await expect(page.getByText("Account balance")).toHaveCount(0);
   }
 
   /* 5. The fresh sweep stays free of console errors. */

@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createTicketAction, sendTicketMessageAction } from "@/lib/actions";
+import SpotlightCard from "@/components/reactbits/SpotlightCard";
+import BorderGlow from "@/components/reactbits/BorderGlow";
 
 export default async function SupportPage({ searchParams }: { searchParams: Promise<{ ticket?: string }> }) {
   const user = await getCurrentUser();
@@ -15,7 +17,7 @@ export default async function SupportPage({ searchParams }: { searchParams: Prom
     ? await prisma.ticket.findFirst({ where: { id: selectedId, ownerId: user.id }, include: { messages: { where: { internal: false }, orderBy: { createdAt: "asc" }, include: { author: true } } } })
     : null;
 
-  const PRIORITY_COLOR: Record<string, string> = { LOW: "", NORMAL: "", HIGH: "sim", URGENT: "sim" };
+  const PRIORITY_COLOR: Record<string, string> = { LOW: "", NORMAL: "", HIGH: "warn", URGENT: "warn" };
 
   return (
     <div className="grid cols-2" style={{ alignItems: "start" }}>
@@ -25,7 +27,7 @@ export default async function SupportPage({ searchParams }: { searchParams: Prom
           <p className="muted" style={{ margin: "6px 0 0" }}>Your conversations raise a ticket in our CRM.</p>
         </div>
 
-        <section className="card">
+        <SpotlightCard className="card" spotlightColor="#4c8dff" intensity={0.16} proximity={80}>
           <h2 style={{ marginTop: 0, fontSize: 18 }}>New conversation</h2>
           <form action={createTicketAction} className="grid" style={{ gap: 10 }}>
             <div>
@@ -38,9 +40,9 @@ export default async function SupportPage({ searchParams }: { searchParams: Prom
             </div>
             <button className="btn primary" type="submit">Start conversation</button>
           </form>
-        </section>
+        </SpotlightCard>
 
-        <section className="card">
+        <SpotlightCard className="card" spotlightColor="#38d39f" intensity={0.16} proximity={80}>
           <h2 style={{ marginTop: 0, fontSize: 18 }}>Your tickets</h2>
           {tickets.length === 0 ? (
             <p className="muted">No tickets yet.</p>
@@ -59,10 +61,18 @@ export default async function SupportPage({ searchParams }: { searchParams: Prom
               ))}
             </ul>
           )}
-        </section>
+        </SpotlightCard>
       </div>
 
-      <section className="card">
+      <BorderGlow
+        className="card"
+        backgroundColor="var(--bg-card)"
+        borderRadius={14}
+        glowColor="160 64 52"
+        colors={["#38d39f", "#4c8dff", "#5227FF"]}
+        glowIntensity={0.9}
+        fillOpacity={0.35}
+      >
         {!selected ? (
           <p className="muted">Select a conversation to view it.</p>
         ) : (
@@ -86,7 +96,7 @@ export default async function SupportPage({ searchParams }: { searchParams: Prom
             </form>
           </>
         )}
-      </section>
+      </BorderGlow>
     </div>
   );
 }

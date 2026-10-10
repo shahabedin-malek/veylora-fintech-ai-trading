@@ -51,8 +51,8 @@ specs (payment flow, payment states, security headers, accessibility, app surfac
 incident-response, launch-audit and e2e reports.
 
 **Safety posture (FACT, from README):** mainnet payment execution disabled by default;
-testnet-only (Sepolia, Base Sepolia, Arbitrum Sepolia, OP Sepolia, Polygon Amoy);
-never store seed phrases/private keys; blockchain is authoritative.
+non-mainnet chains only (Sepolia, Base Sepolia, Arbitrum Sepolia, OP Sepolia, Polygon
+Amoy); never store seed phrases/private keys; blockchain is authoritative.
 
 **Classification:** KEEP + REUSE — this is the fintech application base.
 

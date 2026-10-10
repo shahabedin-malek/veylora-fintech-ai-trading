@@ -18,6 +18,8 @@ export default defineConfig({
     env: {
       // Prisma resolves this relative to prisma/schema.prisma -> prisma/test.db
       DATABASE_URL: "file:./test.db",
+      // Pins the SIWE domain so signature tests are deterministic.
+      SIWE_DOMAIN: "localhost:3210",
     },
   },
 });

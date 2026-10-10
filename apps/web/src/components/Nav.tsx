@@ -1,34 +1,49 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { logoutAction } from "@/lib/actions";
+import AppNav, { type NavLink } from "@/components/AppNav";
 
+/**
+ * Resolves the visitor and the account control, then hands both to the client shell.
+ *
+ * Nothing interactive is decided here: `AppNav` picks the presentation. The one part
+ * that must stay on the server is the sign-out control, because it posts to a server
+ * action — so it is rendered here and passed down as an already-built element, which
+ * is allowed across the server→client boundary (a *function* would not be).
+ */
 export async function Nav() {
   const user = await getCurrentUser();
+
+  const links: NavLink[] = [
+    { label: "Markets", href: "/markets" },
+    ...(user
+      ? [
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Trade", href: "/trade" },
+          { label: "Wallet", href: "/wallet" },
+          { label: "History", href: "/history" },
+        ]
+      : []),
+    { label: "FAQ", href: "/faq" },
+    ...(user?.role === "ADMIN" ? [{ label: "Admin", href: "/admin" }] : []),
+  ];
+
   return (
-    <nav className="nav">
-      <div className="container nav-inner">
-        <Link href="/" className="brand" aria-label="Veylora home">
-          <span className="dot" aria-hidden />
-          Veylora
-        </Link>
-        <div className="nav-links">
-          <Link className="link" href="/markets">Markets</Link>
-          {user && <Link className="link" href="/dashboard">Dashboard</Link>}
-          {user && <Link className="link" href="/trade">Trade</Link>}
-          {user && <Link className="link" href="/wallet">Wallet</Link>}
-          {user && <Link className="link" href="/history">History</Link>}
-          <Link className="link" href="/faq">FAQ</Link>
-          {user?.role === "ADMIN" && <Link className="link" href="/admin">Admin</Link>}
-          {!user && (
-            <Link className="btn primary" href="/login" style={{ marginLeft: 8 }}>Sign in</Link>
-          )}
-          {user && (
-            <form action={logoutAction} style={{ marginLeft: 8 }}>
-              <button className="btn ghost" type="submit" title={user.email}>Sign out</button>
-            </form>
-          )}
-        </div>
-      </div>
-    </nav>
+    <AppNav
+      links={links}
+      account={
+        user ? (
+          <form action={logoutAction}>
+            <button className="btn ghost" type="submit" title={user.walletAddress}>
+              Sign out
+            </button>
+          </form>
+        ) : (
+          <Link className="btn primary" href="/login">
+            Sign in
+          </Link>
+        )
+      }
+    />
   );
 }

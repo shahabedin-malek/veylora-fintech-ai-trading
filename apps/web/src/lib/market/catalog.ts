@@ -4,7 +4,7 @@ export interface Instrument {
   symbol: string;
   name: string;
   assetClass: AssetClass;
-  /** Seed price used only by the simulated provider. */
+  /** Seed price used only by the offline fallback provider. */
   seedUsd: number;
 }
 

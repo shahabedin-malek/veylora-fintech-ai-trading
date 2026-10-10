@@ -49,7 +49,7 @@ a { color: inherit; text-decoration: none; }
   font-size: 12px; padding: 3px 9px; border-radius: 999px;
   border: 1px solid var(--border); color: var(--muted); background: rgba(255,255,255,0.02);
 }
-.badge.sim { border-color: rgba(245,166,35,0.5); color: var(--warn); }
+.badge.warn { border-color: rgba(245,166,35,0.5); color: var(--warn); }
 .badge.live { border-color: rgba(56,211,159,0.5); color: var(--accent); }
 
 .btn {
@@ -96,8 +96,111 @@ table.data tr:last-child td { border-bottom: none; }
 @keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: 0 0 } }
 
 .terminal { background: #060b16; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; min-height: 260px; }
-.terminal .line { padding: 2px 0; color: #9fd7c4; }
-.terminal .line .ts { color: #7f9dc9; margin-right: 8px; }
+.terminal .line { padding: 2px 0; color: #9fd7c4; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.terminal .line .ts { flex: none; color: #7f9dc9; }
+/* the vendored chip is nowrap+overflow:hidden; let its argument ellipsis instead of clip */
+.terminal .terminal-chip { max-width: 100%; min-width: 0; }
+.terminal .terminal-chip .call-chip__arg { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* the thought trace is nowrap/max-content by design; keep it inside the card */
+.terminal-thought { margin-bottom: 10px; max-width: 100%; min-width: 0; }
+.terminal-thought .thought-line__trace { width: 100%; min-width: 0; }
+.terminal-thought .thought-line__fold { overflow-x: hidden; }
+.terminal-thought .thought-line__steps { width: auto; max-width: 100%; white-space: normal; }
+
+/* --------------------------------------------- phase 1 vendored adaptations */
+/* Adapts AnimatedList, Counter, MagicBento and RubberSegment to the app palette.
+ * Scoped with two classes (or the `.landing` ancestor) so it wins regardless of
+ * the order Next.js emits the component stylesheets in. */
+
+/* ------------------------------------------------- news (home cards + sidebar) */
+/* The app shell is the page column plus the image-free news rail. On the landing
+ * page `NewsRail` renders nothing, so `:has` keeps the shell single-column there and
+ * the rail only claims a column once it exists. Below 1100px the rail stacks under
+ * the content instead, so a narrow viewport never overflows. */
+.app-shell { display: grid; gap: 26px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1100px) {
+  .app-shell:has(> .news-rail) { grid-template-columns: minmax(0, 1fr) 320px; }
+}
+.app-main { min-width: 0; }
+
+/* home page picture cards */
+.news-grid { align-items: stretch; }
+.news-card {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)), var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  transition: border-color .15s ease, transform .15s ease;
+}
+.news-card:hover { border-color: var(--accent-2); transform: translateY(-2px); }
+.news-card-media { display: block; width: 100%; height: 168px; object-fit: cover; background: #0a1224; }
+.news-card-media-fallback { background: linear-gradient(135deg, #0d1730, #16233f); }
+.news-card-body { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px 14px; }
+.news-card-headline { font-size: 14px; line-height: 1.35; }
+.news-card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; margin-top: auto; }
+
+/* sidebar rail (every page except the landing page) */
+.news-rail { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.news-rail-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.news-rail-title { font-size: 16px; margin: 0; }
+.news-rail-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.news-rail-list li { display: flex; flex-direction: column; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid rgba(30,44,74,.6); }
+.news-rail-list li:last-child { border-bottom: none; padding-bottom: 0; }
+.news-rail-list a { font-size: 13.5px; line-height: 1.35; font-weight: 600; }
+.news-rail-list a:hover { color: var(--accent-2); }
+.news-rail-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 11.5px; }
+
+/* markets news browser — asset-class filter chips + the full headline list */
+.news-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+.news-filter {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13px; padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--bg-elev); color: var(--muted);
+}
+.news-filter:hover { color: var(--text); border-color: var(--accent-2); }
+.news-filter.active { border-color: var(--accent); color: var(--text); background: rgba(56, 211, 159, 0.10); }
+.news-filter .muted { font-size: 12px; }
+
+.news-browse { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 14px; }
+@media (min-width: 860px) { .news-browse { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.news-browse-item {
+  display: flex; flex-direction: column; gap: 5px;
+  padding-bottom: 12px; border-bottom: 1px solid rgba(30, 44, 74, 0.6);
+}
+.news-browse-headline { font-weight: 600; font-size: 14px; line-height: 1.35; }
+.news-browse-headline:hover { color: var(--accent-2); }
+.news-browse-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; }
+
+/* feed lists (AnimatedList) — dashboard notifications, markets news, admin audit */
+.card .feed-list { width: 100%; }
+.card .feed-list .scroll-list { max-height: 360px; padding: 0; }
+.card .feed-list .item { padding: 12px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: 10px; }
+.card .feed-list .item.selected { background: rgba(76, 141, 255, 0.08); border-color: var(--accent-2); }
+.card .feed-list .item-text { color: var(--text); margin: 0; }
+.card .feed-list .top-gradient { background: linear-gradient(to bottom, var(--bg-card), transparent); }
+.card .feed-list .bottom-gradient { background: linear-gradient(to top, var(--bg-card), transparent); }
+
+/* currency/count KPIs (Counter) */
+.kpi-amount { line-height: 1; white-space: nowrap; }
+.kpi-amount .counter-container { vertical-align: baseline; }
+.kpi-cents { opacity: 0.85; }
+
+/* markets range/view toggles (RubberSegment) */
+.market-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* bento feature grid (MagicBento) — recolor the hardcoded purple glow to the accent */
+.landing .card-grid { max-width: 100%; padding: 0; font-size: inherit; }
+.landing .magic-bento-card { background: var(--bg-card); border-color: var(--border); border-radius: var(--radius); }
+.landing .magic-bento-card--border-glow::after {
+  background: radial-gradient(
+    var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+    rgba(56, 211, 159, calc(var(--glow-intensity) * 0.8)) 0%,
+    rgba(56, 211, 159, calc(var(--glow-intensity) * 0.4)) 30%,
+    transparent 60%
+  );
+}
+.landing .particle::before { background: rgba(56, 211, 159, 0.2); }
+.landing .magic-bento-card--border-glow:hover { box-shadow: 0 0 30px rgba(56, 211, 159, 0.18); }
+.landing .particle-container:hover { box-shadow: 0 0 30px rgba(56, 211, 159, 0.15); }
 
 img, svg { max-width: 100%; }
 
@@ -145,7 +248,9 @@ img, svg { max-width: 100%; }
 /* ------------------------------------------------------------ mobile / tablet */
 @media (max-width: 720px) {
   .container { padding: 0 14px; }
-  .nav-inner { height: auto; min-height: 56px; padding: 8px 0; flex-wrap: wrap; row-gap: 4px; }
+  /* horizontal padding matters: `.nav-inner` is also the `.container`, so setting it
+   * here replaces (not adds to) the container's own padding. */
+  .nav-inner { height: auto; min-height: 56px; padding: 8px 14px; flex-wrap: wrap; row-gap: 4px; }
   .nav-links { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
   .nav-links a.link { flex: 0 0 auto; }
   .card { padding: 14px; }
@@ -165,6 +270,279 @@ img, svg { max-width: 100%; }
 
 /* keep the fixed launcher clear of page content */
 main { padding-bottom: 96px; }
+
+/* ------------------------------------------------- landing: marketing surfaces */
+/*
+ * The animated pieces live in src/components/reactbits (vendored) with their own
+ * CSS; this block only adapts them to the app's palette and spacing, and is kept
+ * specific enough (two classes / a scoping ancestor) to win regardless of the order
+ * Next.js emits the component stylesheets in.
+ */
+
+.landing > section { min-width: 0; }
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background:
+    radial-gradient(900px 420px at 78% -20%, rgba(76, 141, 255, 0.16), transparent 62%),
+    radial-gradient(700px 380px at 4% 0%, rgba(56, 211, 159, 0.13), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+    var(--bg-elev);
+}
+
+/*
+ * The hero headline is a WebGL canvas (WarpText): the canvas is absolutely
+ * positioned and has no intrinsic height, so the wrapper has to own one. Clamped so
+ * the three-line headline has room on a desktop and still ~200px on a phone.
+ */
+.hero-headline { min-width: 0; }
+.hero-warp .warp-text { min-height: clamp(200px, 26vw, 340px); }
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  padding: clamp(24px, 4vw, 44px);
+}
+
+.display {
+  font-size: clamp(2.25rem, 6.4vw, 3.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  margin: 18px 0 12px;
+  max-width: 100%;
+}
+
+/* SplitText renders an inline-block element; keep it inside the hero at every width. */
+.split-parent { max-width: 100%; }
+
+.hero-lede { font-size: 17px; max-width: 660px; margin: 0; line-height: 1.6; }
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* StarBorder renders its own element; make the link version look like our buttons. */
+.cta-star { text-decoration: none; font-weight: 700; font-size: 14px; }
+.cta-star .inner-content { font-weight: 700; font-size: 14px; padding: 12px 24px; border-radius: 12px; }
+.cta-star.star-border-container { border-radius: 12px; }
+
+/* SpecularButton as the primary CTA. Its fx canvas is padded 20px past the button
+ * on every side (that pad is where the rim light bleeds out), so it must sit in a
+ * container that clips — `.hero` already does. */
+.cta-specular { font-weight: 700; }
+
+.stat-band {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) { .stat-band { grid-template-columns: repeat(3, 1fr); } }
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)), var(--bg-card);
+  min-width: 0;
+}
+
+.stat-value { display: block; line-height: 1; }
+.stat-label { font-weight: 700; font-size: 15px; margin-top: 10px; }
+.stat-hint { font-size: 12px; }
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.section-title { margin: 0; }
+
+/* GlareHover ships as a centered grid card; our market cards are left-aligned. */
+.glare-hover.market-card {
+  display: block;
+  place-items: initial;
+  text-align: left;
+}
+
+.glare-hover.market-card:hover { cursor: default; }
+
+.market-card-body { padding: 18px; }
+.market-card-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.market-price { font-size: 24px; margin-top: 8px; }
+
+/* App cards: SpotlightCard / BorderGlow dressed as the standard `.card`.
+ * Two classes so these win over both `.card` and the component's own rule
+ * regardless of the order Next.js emits the stylesheets in. */
+.card.spotlight-card {
+  --spotlight-card-surface: var(--bg-card);
+  --spotlight-card-border: var(--border);
+  --spotlight-card-shadow: 0 18px 40px -26px rgba(0, 0, 0, 0.75);
+  padding: 18px;
+  border-radius: var(--radius);
+  /* drop `.card`'s gradient so the spotlight light reads through */
+  background-color: var(--bg-card);
+  background-image: none;
+}
+/* a table card must still scroll horizontally rather than clip the table */
+.card.spotlight-card.table-wrap { overflow-x: auto; }
+.card.border-glow-card {
+  /* the glow's `.edge-light` sits at `inset: calc(var(--glow-padding) * -1)` and would
+   * overhang the card by 40px; the component sets this inline, so `!important` is the
+   * only way to pull it back to the card edge (the glow still reads via box-shadow). */
+  --glow-padding: 0 !important;
+  padding: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 18px 40px -26px rgba(0, 0, 0, 0.75);
+}
+/* `overflow: hidden` keeps the inner shrinkable — without it long unbreakable
+ * content (e.g. a wallet address) expands the grid and overflows the viewport. */
+.card.border-glow-card > .border-glow-inner { padding: 18px; overflow: hidden; }
+
+/* The LogoLoop track is width: max-content and translated, so the wrapper must clip. */
+.marquee {
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 0;
+}
+
+.marquee .logoloop__item { color: var(--muted); letter-spacing: .01em; }
+
+/* Stepper reads --border-primary for its inline border; point it at our palette. */
+.steps-section { --border-primary: var(--border); }
+
+/* Stepper: drop the demo aspect-ratio/padding and widen it for a content column. */
+.steps-section .outer-container { aspect-ratio: auto; padding: 0; min-height: 0; }
+.steps-section .step-circle-container { max-width: none; box-shadow: none; border-radius: var(--radius); }
+.steps-section .step-indicator-row { padding: 22px 18px 0; }
+.steps-section .step-default { padding-left: 18px; padding-right: 18px; }
+.steps-section .footer-container { padding: 0 18px 18px; }
+.steps-section .footer-nav { margin-top: 18px; }
+.steps-section .next-button { background-color: #2b6fe0; }
+.steps-section .next-button:hover,
+.steps-section .next-button:active { background-color: #1e56b8; }
+.steps-section .next-button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+.step-title { display: flex; align-items: baseline; gap: 10px; margin: 8px 0 6px; font-size: 18px; }
+.step-index { color: var(--accent); font-size: 13px; }
+.step-body { margin: 0; line-height: 1.65; max-width: 720px; }
+
+.cta-card { display: grid; gap: 4px; justify-items: start; }
+.cta-card .hero-actions { margin-top: 18px; }
+
+.loading-row { display: flex; align-items: center; gap: 12px; color: var(--muted); }
+.loading-row .lattice-loader { color: var(--muted); }
+
+/* ------------------------------------------------------ nav: pill + staggered menu */
+/*
+ * Phase 4 replaces the plain link row with PillNav (desktop) and StaggeredMenu
+ * (mobile). Both vendored components ship as full navs in their own right — a
+ * floating pill group over a hero, and a full-height drawer — so this block only
+ * slots them into the existing sticky bar, re-points their palette at the app's, and
+ * stops them fighting the bar's layout.
+ *
+ * Everything is scoped to `.nav-enhanced`, which only the enhanced branch of
+ * `AppNav` renders. The reduced-motion fallback keeps `.nav`/`.nav-links` exactly as
+ * they were, including the horizontal-scrolling link row on narrow screens.
+ */
+.nav-enhanced .nav-links { gap: 10px; flex-wrap: nowrap; align-items: center; }
+.nav-account { display: flex; align-items: center; }
+
+/* PillNav: drop its logo (the bar already links the brand home) and let it sit in
+ * the flex row instead of floating over the page. */
+.nav-enhanced .pill-logo { display: none; }
+.nav-enhanced .pill-nav-container { position: static; top: auto; z-index: auto; }
+.nav-enhanced .pill-nav { --nav-h: 40px; --pill-pad-x: 13px; }
+.nav-enhanced .pill { font-size: 15px; }
+.nav-enhanced .pill.is-active { background: #14345f; box-shadow: inset 0 0 0 1px rgba(142, 242, 198, 0.45); }
+/* `is-active` also paints a dot in `--base`, which is the track it sits on. */
+.nav-enhanced .pill.is-active::after { display: none; }
+/* GSAP offsets the hover copy at runtime; until it runs (first paint, no JS) both
+ * labels would sit on top of each other. */
+.nav-enhanced .pill-label-hover { opacity: 0; }
+
+/* The scripting-off link row is only wanted where the drawer would have been used;
+ * above the breakpoint the pills are anchors and already work without JS. */
+.nav-enhanced .nav-nojs { display: none; }
+
+/* StaggeredMenu: only its toggle belongs in the bar — its own logo and 2em header
+ * padding are the bar's job — and its drawer is pinned to the viewport. */
+.nav-enhanced .nav-staggered { display: none; }
+.nav-enhanced .staggered-menu-wrapper { position: static; width: auto; height: auto; z-index: auto; }
+.nav-enhanced .staggered-menu-header { position: static; width: auto; padding: 0; }
+.nav-enhanced .sm-logo { display: none; }
+/* Three classes, so these win over the component's own `[data-position='left']`
+ * rules no matter which stylesheet Next.js emits first. */
+.nav-enhanced .nav-staggered .staggered-menu-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: auto;
+  height: 100dvh;
+  width: min(360px, 86vw);
+  z-index: 60;
+  background: var(--bg-elev);
+  border-right: 1px solid var(--border);
+}
+.nav-enhanced .nav-staggered .sm-prelayers {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: auto;
+  bottom: 0;
+  width: min(360px, 86vw);
+  z-index: 55;
+}
+/* The drawer covers the bar it slides over, so the toggle has to out-rank it. Both
+ * live in the bar's stacking context, so a larger z-index is enough. */
+.nav-enhanced .sm-toggle { position: relative; z-index: 80; min-height: 44px; min-width: 44px; color: var(--text); }
+.nav-enhanced .sm-panel-item { color: var(--text); font-size: clamp(1.5rem, 7vw, 2.2rem); letter-spacing: -0.01em; }
+.nav-enhanced .sm-panel-item:hover { color: var(--accent); }
+.nav-enhanced .sm-socials-title { color: var(--accent); }
+
+/* Below this width a signed-in visitor's pills (Dashboard/Trade/Wallet/History/
+ * FAQ/Admin) stop fitting the bar, so the drawer takes over well before that. */
+@media (max-width: 900px) {
+  .nav-enhanced .nav-staggered { display: block; }
+  .nav-enhanced .nav-pill { display: none; }
+  /* overrides the ≤720px link-row rules, which assumed one long scrollable row */
+  .nav-enhanced .nav-inner { flex-wrap: nowrap; height: 56px; min-height: 56px; padding: 0 14px; gap: 10px; }
+  .nav-enhanced .nav-links { width: auto; flex-wrap: nowrap; overflow: visible; margin-left: auto; padding-bottom: 0; }
+
+  /* The scripting-off link row (rendered inside <noscript>). It scrolls rather than
+   * wrapping, so it can never widen the page. */
+  .nav-enhanced .nav-nojs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 0 14px 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nav-enhanced .nav-nojs a.link { flex: 0 0 auto; }
+}
+
+/* With scripting off the drawer can never open, so do not leave a dead toggle in the
+ * bar next to the working link row. */
+@media (scripting: none) {
+  .nav-enhanced .nav-staggered { display: none; }
+}
 
 @media print {
   .support-fab, .nav, .skip-link { display: none; }

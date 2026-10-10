@@ -1,6 +1,6 @@
 import { CATALOG, instrument } from "@/lib/market/catalog";
 import type { AssetClass, Candle, MarketDataProvider, Quote } from "@/lib/market/types";
-import { SimulatedProvider } from "@/lib/market/simulated";
+import { OfflineProvider } from "@/lib/market/offline";
 
 const IDS: Record<string, string> = {
   BTC: "bitcoin", ETH: "ethereum", SOL: "solana", XRP: "ripple", ADA: "cardano", DOGE: "dogecoin",
@@ -8,13 +8,13 @@ const IDS: Record<string, string> = {
 
 /**
  * Live crypto prices from the public CoinGecko API (no API key required).
- * Only crypto is supported; forex/equity requests fall back to the simulated
+ * Only crypto is supported; forex/equity requests fall back to the offline
  * provider. Network failures throw and the caller falls back gracefully.
  */
 export class CoinGeckoProvider implements MarketDataProvider {
   id = "coingecko";
   supports: AssetClass[] = ["crypto"];
-  private fallback = new SimulatedProvider();
+  private fallback = new OfflineProvider();
 
   async getQuotes(symbols: string[]): Promise<Quote[]> {
     const wanted = symbols.map((s) => s.toUpperCase());
@@ -46,7 +46,7 @@ export class CoinGeckoProvider implements MarketDataProvider {
             low24hUsd: d.low_24h ?? undefined,
             volume24hUsd: d.total_volume ?? undefined,
             source: "coingecko",
-            simulated: false,
+            offline: false,
             asOf: new Date().toISOString(),
           });
         }
@@ -59,7 +59,7 @@ export class CoinGeckoProvider implements MarketDataProvider {
   }
 
   /** Real OHLC candles from CoinGecko's ohlc endpoint, with volume matched from
-   * market_chart. No high/low values are synthesized. Falls back to simulated. */
+   *    market_chart. No high/low values are synthesized. Falls back to offline. */
   async getCandles(symbol: string, points: number): Promise<Candle[]> {
     if (instrument(symbol)?.assetClass !== "crypto") return this.fallback.getCandles(symbol, points);
     const id = IDS[symbol.toUpperCase()];
@@ -84,7 +84,7 @@ export class CoinGeckoProvider implements MarketDataProvider {
         l,
         c,
         v: nearestVolume(vols, t),
-        simulated: false,
+        offline: false,
       }));
     } catch {
       return this.fallback.getCandles(symbol, points);

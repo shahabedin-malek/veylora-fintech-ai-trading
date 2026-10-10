@@ -1,0 +1,62 @@
+https://rss.app/feeds/tTQBntgpb3hxqt7X.xml
+https://bitcoinmagazine.com/.rss/full/
+https://bitcoinist.com/feed/
+https://www.coindesk.com/arc/outboundfeeds/rss
+https://cointelegraph.com/rss
+https://cryptopotato.com/feed/
+https://cryptoslate.com/feed/
+https://decrypt.co/feed
+https://www.newsbtc.com/feed/
+https://cryptobriefing.com/feed/
+https://www.sharpe.ai/news/feed.xml
+https://www.rsscrypto.com/#newest/all
+
+
+curl -G https://www.sharpe.ai/api/v1/news/feed \
+  -H "Authorization: Bearer sk_live_your_key_here" \
+  -d limit=10 \
+  -d category=crypto
+
+{
+  "data": {
+    "articles": [
+      {
+        "id": 48201,
+        "title": "Bitcoin Surges Past $95K as ETF Inflows Hit Record",
+        "summary": "Spot Bitcoin ETFs recorded $1.2B in net inflows...",
+        "author": "CoinDesk Staff",
+        "tags": ["bitcoin", "etf", "institutional"],
+        "link": "https://coindesk.com/...",
+        "source": "CoinDesk",
+        "source_tier": 1,
+        "published": "2026-03-28T10:30:00Z",
+        "fetched_at": "2026-03-28T10:35:00Z",
+        "coin_tags": ["bitcoin"],
+        "category": "crypto"
+      },
+      {
+        "id": 48200,
+        "title": "Federal Reserve issues FOMC statement",
+        "summary": "The Federal Reserve kept rates unchanged at 4.25%...",
+        "author": null,
+        "tags": ["fed", "rates", "macro"],
+        "link": "https://www.federalreserve.gov/newsevents/pressreleases/...",
+        "source": "Federal Reserve",
+        "source_tier": 1,
+        "published": "2026-03-28T09:15:00Z",
+        "fetched_at": "2026-03-28T09:20:00Z",
+        "coin_tags": [],
+        "category": "macro"
+      }
+    ],
+    "total": 11,
+    "next_offset": 10,
+    "truncated": false
+  },
+  "meta": {
+    "request_id": "req_abc123def456ghij",
+    "timestamp": "2026-03-28T10:36:00Z",
+    "elapsed_ms": 12
+  }
+}
+

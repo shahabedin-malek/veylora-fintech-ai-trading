@@ -14,5 +14,5 @@ If a new session starts and the only user message is `continue`:
    - product build       -> continue in `apps/web/` (Phases 13-15)
 6. Update the checkpoint and continue. Never redo verified work.
 
-Last rendered: 2026-10-08 21:27:27 UTC
-Next exact action: resume `PHASE18-001`.
+Last rendered: 2026-10-10 04:53:31 UTC
+Next exact action: resume `PHASE18-004`.

@@ -1,7 +1,7 @@
 # PROMPT / TODO CHECKLIST
 
-> Auto-generated from the task queue at 2026-10-08 21:27:27 UTC.
-> Authoritative task count: 203 (old 5 + repo 146 + phase tasks).
+> Auto-generated from the task queue at 2026-10-10 04:53:31 UTC.
+> Authoritative task count: 213 (old 5 + repo 146 + phase tasks).
 
 - [x] `PHASE0-001` [Phase 0] Inspect project root, framework, tools, machine
 - [x] `PHASE0-002` [Phase 0] Create .progress control plane
@@ -37,15 +37,25 @@
 - [x] `PHASE16-001` [Phase 16] Publish source to GitHub (veylora-fintech-ai-trading)
 - [x] `PHASE16-002` [Phase 16] Deploy to Vercel + live post-deploy verification
 - [x] `PHASE17-001` [Phase 17] Final walkthrough gate (fresh browser session)
-- [ ] `PHASE18-001` [Phase 18] Wallet connect + SIWE login (replace email/password)
-- [ ] `PHASE18-002` [Phase 18] Network classification: chainId -> TESTNET|MAINNET, bound to session
-- [ ] `PHASE18-003` [Phase 18] Server-side execution gate with explicit real vs simulated paths
-- [ ] `PHASE18-004` [Phase 18] Real custody model (KMS/HSM hot wallet or user-signed transfers)
-- [ ] `PHASE18-005` [Phase 18] Real execution venue integration (exchange/broker or on-chain swap)
-- [ ] `PHASE18-006` [Phase 18] Irreversibility UX: confirmations, spend caps, idempotency keys
+- [x] `PHASE18-001` [Phase 18] Wallet connect + SIWE login (replace email/password)
+- [x] `PHASE18-002` [Phase 18] Network classification: chainId -> MAINNET|SANDBOX, bound to session
+- [x] `PHASE18-003` [Phase 18] Server-side execution gate with explicit real vs practice paths
+- [~] `PHASE18-004` [Phase 18] Custodial hot-wallet custody (KMS/HSM keys, spend limits)
+- [ ] `PHASE18-005` [Phase 18] Real venues: on-chain transfers + exchange/broker trading
+- [~] `PHASE18-006` [Phase 18] Irreversibility UX: confirmations, spend caps, idempotency keys
 - [ ] `PHASE18-007` [Phase 18] Compliance: KYC/AML, sanctions screening, jurisdiction gating
-- [ ] `PHASE18-008` [Phase 18] Replace simulated-only invariants with network-gating tests
-- [ ] `PHASE18-009` [Phase 18] Rewrite user-facing copy + FAQ for the wallet-typed model
+- [x] `PHASE18-008` [Phase 18] Replace practice-only invariants with network-gating tests
+- [x] `PHASE18-009` [Phase 18] Rewrite user-facing copy + FAQ for the wallet-typed model
+- [x] `PHASE19-001` [Phase 19] Coinbase knowledge base: split CDP docs into /coinbase
+- [x] `PHASE19-002` [Phase 19] Coinbase login: OAuth / Sign in with Coinbase alongside SIWE
+- [x] `PHASE19-003` [Phase 19] Coinbase deposits: Onramp + Deposit Destinations + payment methods
+- [ ] `PHASE19-004` [Phase 19] Coinbase trading: real venue adapter (Advanced Trade/Trade API, swaps)
+- [x] `PHASE19-005` [Phase 19] Coinbase withdrawals: Offramp + disbursements + transfer-out
+- [x] `PHASE19-006` [Phase 19] Coinbase webhooks: verify + ingest transfer/payment events into ledger
+- [ ] `PHASE19-007` [Phase 19] Coinbase CDP credentials: sandbox->live, secret hygiene, key rotation
+- [ ] `PHASE19-008` [Phase 19] Coinbase sandbox + tests (unit/integration/e2e)
+- [ ] `PHASE19-009` [Phase 19] Coinbase UI surfaces (connect/onramp/withdraw/trade) on existing routes
+- [ ] `PHASE19-010` [Phase 19] Coinbase compliance: KYC/AML, sanctions, jurisdiction gating
 - [x] `OLD-0001` [Phase 2] Audit historical project crypto-payment-backup
 - [x] `OLD-0002` [Phase 2] Audit historical project crypto-portal
 - [x] `OLD-0003` [Phase 2] Audit historical project crypto-portal-backup
